@@ -7,7 +7,7 @@
 #include <ctime>
 #include <algorithm>
 #define POPULATION_SIZE 50
-#define MUTATION_PERCENT 5
+#define MUTATION_PERCENT 25
 
 using namespace std;
 
@@ -114,7 +114,7 @@ int *greedy_coloring_matrix(int **adj, int n) {
                 break;
 
 
-        result[i] = cr;
+        result[i] = cr+1;
         for (int j = 0; j < n; j++)
             available[j] = false;
     }
@@ -216,10 +216,10 @@ int maxDegree(int **adj, int n){
     }
     return maks;
 }
-vector < vector <int>* > *generatePopulation (int maxDegree, int n){
+vector < vector <int>* > *generatePopulation (int maxDegree, int n, int sampleSize){
 
     auto *res = new vector < vector < int >* >;
-    for(int i = 0; i < POPULATION_SIZE; i++)
+    for(int i = 0; i < POPULATION_SIZE-sampleSize; i++)
     {
         auto* tmp = new vector<int>;
         for(int j = 0; j < n; j++){
@@ -272,9 +272,18 @@ vector <vector <int>* > *crossover(vector <int> *first, vector <int> *second, in
 return res;
 }
 
-void mutate(vector <int> *chromosome, int n, int maxColor){
+void mutate(vector <int> *chromosome, int n, int maxColor, int **adj){
     int a = rand()%n;
-    int newColor = rand()%maxColor+1;
+    vector<int> tabu;
+    for(int i = 0; i < n; i++){
+        if(adj[a][i] == 1){
+            tabu.push_back(chromosome->at(i));
+        }
+    }
+    int newColor = 0;
+    while(find(tabu.begin(),  tabu.end(), newColor)==tabu.end()){
+        newColor++;
+    }
     chromosome->at(a) = newColor;
 }
 
@@ -311,13 +320,15 @@ vector <int> *minimalizeColors(vector <int> *chromosome, int maxColors){
     return newChromosome;
 }
 
-int geneticAlg(int **adj, int n){
+int geneticAlg(int **adj, int n, vector<int> *sample){
     int colors = 0;
     int mDeg = maxDegree(adj, n);
     vector<vector<int>* > *population;
     vector<vector<int>* > *newPopulation;
-    population = generatePopulation(mDeg, n);
-    while(fittest(population->at(0), adj, n)>0) {
+    population = generatePopulation(20, n, 1);
+    population->push_back(sample);
+    int t;
+    while(t++<10000) {
         newPopulation = newPop(population, adj, n);
         for (int i = 0; i < POPULATION_SIZE; i += 2) {
             auto *tmp = new vector<vector<int> *>;
@@ -331,19 +342,23 @@ int geneticAlg(int **adj, int n){
             vector<int> *tmp = minimalizeColors(population->at(i), colors);
             population->at(i) = tmp;
             if (rand() % 100 < MUTATION_PERCENT) {
-                mutate(population->at(i), n, colors);
+                mutate(population->at(i), n, colors, adj);
+                mutate(population->at(i), n, colors, adj);
+                mutate(population->at(i), n, colors, adj);
             }
         }
         colors = colorCount(population);
-        cout << colors << "\t";
+        int pen = fittest(population->at(0), adj, n);
+        cout << colors << "(" << pen << ")\t";
     }
-    cout << "Best chromosome:\n\t";
+    cout << "\nBest chromosome:\n\t";
     for(int gene : *population->at(0)){
         cout << gene << "\t";
     }
     cout << endl;
     cout << "Pen: "<< fittest(population->at(0), adj, n);
     cout << endl;
+    cout << "colors: " << colors << endl;
     return colors;
 }
 
@@ -351,7 +366,7 @@ int geneticAlg(int **adj, int n){
 
 int main() {
     srand(time(NULL));
-    char f_name[] = "gc500.txt";
+    char f_name[] = "gc30_50.txt";
     int **matrix;
     int n;
 
@@ -363,10 +378,19 @@ int main() {
 //        printf("wierzcholek %d --> %d\n", i + 1, outcome[i] + 1);
 //    }
 
+    auto *sample = new vector<int>;
+    for(int i = 0; i < n; i++){
+        sample->push_back(outcome[i]);
+    }
+
     int max_color = 0;
     struct Node **lista;
     lista = graph(matrix, n);
     outcome = greedy_coloring_list(lista, n);
+
+
+
+
     FILE *output = fopen("output1000.txt", "w");
 //    printf("\nwynik:\n");
 //    for (int i = 0; i < n; i++) {
@@ -382,5 +406,5 @@ int main() {
     cout << endl << "Penalty: " << fittest(outcome, matrix, n) << endl;
     printf("Uzyta ilosc kolorow: %d\n", max_color);
     cout << "Max Degree " << maxDegree(matrix, n) << endl;
-    cout << "Final result" << geneticAlg(matrix, n);
+    cout << "Final result: " << geneticAlg(matrix, n, sample);
 }
