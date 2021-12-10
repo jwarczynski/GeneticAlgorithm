@@ -6,7 +6,7 @@
 #include <vector>
 #include <ctime>
 #include <algorithm>
-#define POPULATION_SIZE 200
+#define POPULATION_SIZE 100
 #define MUTATION_PERCENT 25
 
 using namespace std;
@@ -344,10 +344,10 @@ vector <int> * mate(vector <int>* mother, vector<int>*father, int maxColors){
     auto res = new vector<int>;
     for(int i = 0; i < mother->size(); i++){
         int a = rand()%100;
-        if(a < 40){
+        if(a < 48){
             res->push_back(mother->at(i));
         }
-        else if(a < 80){
+        else if(a < 96){
             res->push_back(father->at(i));
         }
         else{
@@ -360,10 +360,10 @@ vector <int> * mate(vector <int>* mother, vector<int>*father, int maxColors){
 vector<pair<vector<int>*, int>*> *newPopVol2(vector<pair<vector<int>*, int>*> *population, int maxColors){
     auto *newPopulation = new vector<pair<vector<int>*, int>*>;
     int i=0;
-    for (i; i < 5;i++) {
+    for (i; i < population->size()/10;i++) {
         newPopulation->push_back(population->at(i));
     }
-    for(i; i< population->size()-10; i++){
+    for(i; i< population->size(); i++){
         int mother = rand()%(population->size()/2);
         int father = rand()%(population->size()/2);
         while(father==mother){
@@ -374,11 +374,11 @@ vector<pair<vector<int>*, int>*> *newPopVol2(vector<pair<vector<int>*, int>*> *p
         p->second = fittest(p->first);
         newPopulation->push_back(p);
     }
-    auto *tmp = new vector<pair<vector<int>*, int>*>;
-    tmp = generatePopulation(maxColors, population->size()-10);
-    for(auto line: *tmp){
-        newPopulation->push_back(line);
-    }
+//    auto *tmp = new vector<pair<vector<int>*, int>*>;
+//    tmp = generatePopulation(maxColors, population->size()-10);
+//    for(auto line: *tmp){
+//        newPopulation->push_back(line);
+//    }
     return newPopulation;
 }
 
@@ -387,8 +387,8 @@ vector<pair<vector<int>*, int>*> *devaluate(vector<pair<vector<int>*, int>*> *po
     for(pair<vector<int>*, int> *p : *population){
         auto *newChromosome = new vector<int>;
         for(int gene: *p->first){
-            if(gene == maxColors){
-                newChromosome->push_back(rand()%(maxColors-1)+1);
+            if(gene == maxColors-1){
+                newChromosome->push_back(gene-1);
             }
             else{
                 newChromosome->push_back(gene);
@@ -406,7 +406,7 @@ int geneticAlg(vector<pair<vector<int>*, int>*> *sample){
     int colors = 0;
     int mDeg;
     if(sample->empty()){
-        mDeg = 100;
+        mDeg = maxDegree();
     }
     else{
         mDeg = colorCount(sample);
@@ -419,7 +419,7 @@ int geneticAlg(vector<pair<vector<int>*, int>*> *sample){
         population->push_back(s);
     }
     sort(population->begin(),  population->end(), comp);
-    int t;
+    int t=0;
     int best;
     vector <int> *bestChr;
     while(t++ < 100000) {
@@ -435,7 +435,7 @@ int geneticAlg(vector<pair<vector<int>*, int>*> *sample){
         population = newPopulation;
         colors = colorCount(population);
         for(auto & i : *population){
-            mutate(i->first, colors);
+            //mutate(i->first, colors);
 //            mutate(i->first, colors);
 //            mutate(i->first, colors);
 //            mutate(i->first, colors);
@@ -450,7 +450,8 @@ int geneticAlg(vector<pair<vector<int>*, int>*> *sample){
             best = colors;
             bestChr = population->at(0)->first;
             population = devaluate(population, best);
-            colors = colorCount(population);
+            colors--;
+            //colors = colorCount(population);
         }
     }
     cout << "\nBest chromosome:\n\t";
@@ -468,7 +469,7 @@ int geneticAlg(vector<pair<vector<int>*, int>*> *sample){
 
 int main() {
     srand(time(NULL));
-    char f_name[] = "queen6.txt";
+    char f_name[] = "le450_5a.txt";
 
 
     read(f_name);
