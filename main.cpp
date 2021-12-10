@@ -6,7 +6,7 @@
 #include <vector>
 #include <ctime>
 #include <algorithm>
-#define POPULATION_SIZE 100
+#define POPULATION_SIZE 200
 #define MUTATION_PERCENT 25
 
 using namespace std;
@@ -95,15 +95,15 @@ void read(char *name) {
 
 int *greedy_coloring_matrix() {
     int cr;
-    bool *available = new bool[n];
+    bool *available = new bool[n+1];
     int *result = new int[n];
     for (int i = 0; i < n; i++) {
         available[i] = false;
         result[i] = -1;
     }
 
-    result[0] = 0;
-    cr = 0;
+    result[0] = 1;
+    cr = 1;
 
     for (int i = 1; i < n; i++) {
         for (int j = 0; j < n; j++) {
@@ -111,12 +111,12 @@ int *greedy_coloring_matrix() {
                 available[result[j]] = true;
         }
 
-        for (cr = 0; cr < n; cr++)
+        for (cr = 1; cr <= n; cr++)
             if (!available[cr])
                 break;
 
 
-        result[i] = cr+1;
+        result[i] = cr;
         for (int j = 0; j < n; j++)
             available[j] = false;
     }
@@ -133,15 +133,15 @@ int *greedy_coloring_matrix() {
 int *greedy_coloring_list(struct Node **adj) {
     struct Node *tmp;
     int cr;
-    bool *available = new bool[n];
+    bool *available = new bool[n+1];
     int *result = new int[n];
     for (int i = 0; i < n; i++) {
         available[i] = false;
         result[i] = -1;
     }
 
-    result[0] = 0;
-    cr = 0;
+    result[0] = 1;
+    cr = 1;
 
     for (int i = 1; i < n; i++) {
         tmp = adj[i]->child;
@@ -151,7 +151,7 @@ int *greedy_coloring_list(struct Node **adj) {
             tmp = tmp->child;
         }
 
-        for (cr = 0; cr < n; cr++)
+        for (cr = 1; cr <= n; cr++)
             if (!available[cr])
                 break;
 
@@ -193,7 +193,7 @@ int fittest(vector <int> *chromosome){
     int penalty = 0;
     for(int i = 0; i < n; i++)
     {
-        for(int j = 0; j < n; j++)
+        for(int j = i+1; j < n; j++)
         {
             if(adj[i][j] == 1){
                 if(chromosome->at(i) == chromosome->at(j)){
@@ -221,9 +221,9 @@ int maxDegree(){
     }
     return maks;
 }
-vector < vector <int>* > *generatePopulation (int maxDegree, int sampleSize){
+vector<pair<vector<int>*, int>*> *generatePopulation (int maxDegree, int sampleSize){
 
-    auto *res = new vector < vector < int >* >;
+    auto *res = new vector<pair<vector<int>*, int>*>;
     for(int i = 0; i < POPULATION_SIZE-sampleSize; i++)
     {
         auto* tmp = new vector<int>;
@@ -231,7 +231,9 @@ vector < vector <int>* > *generatePopulation (int maxDegree, int sampleSize){
             int a = rand()%maxDegree+1;
             tmp->push_back(a);
         }
-        res->push_back(tmp);
+        auto *p = new pair<vector<int>*, int>;
+        *p = make_pair(tmp, fittest(tmp));
+        res->push_back(p);
     }
     return res;
 }
@@ -274,24 +276,14 @@ vector <vector <int>* > *crossover(vector <int> *first, vector <int> *second){
 
     return res;
 }
-
-vector < vector < int >* > *newPopVol2(vector < vector < int >* > *population){
-    auto *newPopulation = new vector < vector < int >* >;
-    sort(population->begin(),  population->end());
-    int i=0;
-    for (i; i < population->size()/10;i++) {
-        newPopulation->push_back(population->at(i));
-    }
-    for(i; i< population->size(); i++){
-        int mother = rand()%(population->size()/2);
-        int father = rand()%(population->size()/2);
-        while(father==mother){
-            father=(father+1)%(population->size()/2);
-        }
-        auto *tmp = crossover(population->at(mother), population->at(father));
-        newPopulation->push_back(tmp->at(0));
-    }
+bool comp(pair<vector<int>*, int>*a, pair<vector<int>*, int>*b){
+    return a->second < b->second;
 }
+
+
+
+
+
 
 
 void mutate(vector <int> *chromosome, int maxColor){
@@ -309,12 +301,19 @@ void mutate(vector <int> *chromosome, int maxColor){
     chromosome->at(a) = newColor;
 }
 
-int colorCount(vector < vector < int >* > *population){
+
+int colorCount(vector <int> * chromosome){
     int res = 0;
-    for(const vector <int> *chromosome: *population){
-        for(int gene: *chromosome){
-            res = max(res, gene);
-        }
+    for(int gene: *chromosome){
+        res = max(res, gene);
+    }
+    return res;
+}
+
+int colorCount(vector<pair<vector<int>*, int>*> *population){
+    int res = 0;
+    for(pair<vector<int>*, int> *chromosome: *population){
+        res = max(res, colorCount(chromosome->first));
     }
     return res;
 }
@@ -341,61 +340,135 @@ vector <int> *minimalizeColors(vector <int> *chromosome, int maxColors){
     }
     return newChromosome;
 }
-
-bool comp(vector<int>*a, vector<int>*b){
-    return fittest(a) < fittest(b);
+vector <int> * mate(vector <int>* mother, vector<int>*father, int maxColors){
+    auto res = new vector<int>;
+    for(int i = 0; i < mother->size(); i++){
+        int a = rand()%100;
+        if(a < 40){
+            res->push_back(mother->at(i));
+        }
+        else if(a < 80){
+            res->push_back(father->at(i));
+        }
+        else{
+            res->push_back(rand()%maxColors+1);
+        }
+    }
+    return res;
 }
 
-int geneticAlg(vector<vector<int>*> *sample){
+vector<pair<vector<int>*, int>*> *newPopVol2(vector<pair<vector<int>*, int>*> *population, int maxColors){
+    auto *newPopulation = new vector<pair<vector<int>*, int>*>;
+    int i=0;
+    for (i; i < 5;i++) {
+        newPopulation->push_back(population->at(i));
+    }
+    for(i; i< population->size()-10; i++){
+        int mother = rand()%(population->size()/2);
+        int father = rand()%(population->size()/2);
+        while(father==mother){
+            father=(father+1)%(population->size()/2);
+        }
+        auto *p = new pair<vector<int>*, int>;
+        *p = make_pair(mate(population->at(mother)->first, population->at(father)->first, maxColors),0);
+        p->second = fittest(p->first);
+        newPopulation->push_back(p);
+    }
+    auto *tmp = new vector<pair<vector<int>*, int>*>;
+    tmp = generatePopulation(maxColors, population->size()-10);
+    for(auto line: *tmp){
+        newPopulation->push_back(line);
+    }
+    return newPopulation;
+}
+
+vector<pair<vector<int>*, int>*> *devaluate(vector<pair<vector<int>*, int>*> *population, int maxColors){
+    auto *newPopulation = new vector<pair<vector<int>*, int>*>;
+    for(pair<vector<int>*, int> *p : *population){
+        auto *newChromosome = new vector<int>;
+        for(int gene: *p->first){
+            if(gene == maxColors){
+                newChromosome->push_back(rand()%(maxColors-1)+1);
+            }
+            else{
+                newChromosome->push_back(gene);
+            }
+        }
+        auto *pr = new pair <vector<int>*, int>;
+        *pr = make_pair(newChromosome, fittest(newChromosome));
+        newPopulation->push_back(pr);
+    }
+    return newPopulation;
+}
+
+
+int geneticAlg(vector<pair<vector<int>*, int>*> *sample){
     int colors = 0;
-    int mDeg = maxDegree();
-    vector<vector<int>* > *population;
-    vector<vector<int>* > *newPopulation;
-    population = generatePopulation(9, sample->size());
-    for(vector <int> *s: *sample){
+    int mDeg;
+    if(sample->empty()){
+        mDeg = 100;
+    }
+    else{
+        mDeg = colorCount(sample);
+    }
+    vector<pair<vector<int>*, int>*> *population;
+    vector<pair<vector<int>*, int>*> *newPopulation;
+    population = generatePopulation(mDeg-1, sample->size());
+    colors = mDeg;
+    for(pair<vector<int>*, int> *s: *sample){
         population->push_back(s);
     }
+    sort(population->begin(),  population->end(), comp);
     int t;
-    while(fittest(population->at(0))> 0) {
-        newPopulation = newPop(population);
-        for (int i = 0; i < POPULATION_SIZE; i += 2) {
-            auto *tmp = new vector<vector<int> *>;
-            tmp = crossover(newPopulation->at(i), newPopulation->at(i + 1));
-            newPopulation->at(i) = tmp->at(0);
-            newPopulation->at(i + 1) = tmp->at(1);
-        }
+    int best;
+    vector <int> *bestChr;
+    while(t++ < 100000) {
+
+        newPopulation = newPopVol2(population, colors);
+
+//        for (int i = 0; i < POPULATION_SIZE; i += 2) {
+//            auto *tmp = new vector<vector<int> *>;
+//            tmp = crossover(newPopulation->at(i), newPopulation->at(i + 1));
+//            newPopulation->at(i) = tmp->at(0);
+//            newPopulation->at(i + 1) = tmp->at(1);
+//        }
         population = newPopulation;
         colors = colorCount(population);
-        for(int i = 0; i < population->size(); i++){
-            vector<int> *tmp = minimalizeColors(population->at(i), colors);
-            population->at(i) = tmp;
-            if (rand() % 100 < MUTATION_PERCENT) {
-                mutate(population->at(i), colors);
-                mutate(population->at(i), colors);
-                mutate(population->at(i), colors);
-            }
+        for(auto & i : *population){
+            mutate(i->first, colors);
+//            mutate(i->first, colors);
+//            mutate(i->first, colors);
+//            mutate(i->first, colors);
+//            mutate(i->first, colors);
+            vector<int> *tmp = minimalizeColors(i->first, colors);
+            i->first = tmp;
         }
         colors = colorCount(population);
         sort(population->begin(),  population->end(), comp);
-        int pen = fittest(population->at(0));
-        cout << colors << "(" << pen << ")\t";
+        cout << t << ": " << colors << "(" << population->at(1)->second << ")\t";
+        if(population->at(0)->second == 0){
+            best = colors;
+            bestChr = population->at(0)->first;
+            population = devaluate(population, best);
+            colors = colorCount(population);
+        }
     }
     cout << "\nBest chromosome:\n\t";
-    for(int gene : *population->at(0)){
+    for(int gene : *bestChr){
         cout << gene << "\t";
     }
+//    cout << endl;
+//    cout << "Pen: "<< fittest(population->at(0));
     cout << endl;
-    cout << "Pen: "<< fittest(population->at(0));
-    cout << endl;
-    cout << "colors: " << colors << endl;
-    return colors;
+    cout << "colors: " << best << endl;
+    return best;
 }
 
 
 
 int main() {
     srand(time(NULL));
-    char f_name[] = "gc30_50.txt";
+    char f_name[] = "queen6.txt";
 
 
     read(f_name);
@@ -410,7 +483,10 @@ int main() {
     for(int i = 0; i < n; i++){
         sample->push_back(outcome[i]);
     }
-    auto *samplePopulation = new vector<vector<int>*>;
+    auto *samplePair = new pair<vector<int>*, int>;
+    *samplePair = make_pair(sample, fittest(sample));
+    auto *samplePopulation = new vector<pair<vector<int>*, int>*>;
+    samplePopulation->push_back(samplePair);
 
     int max_color = 0;
     struct Node **lista;
