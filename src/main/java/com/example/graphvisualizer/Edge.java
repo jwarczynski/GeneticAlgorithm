@@ -29,22 +29,24 @@ public class Edge {
         skin.setEndX(endX);
         skin.setEndY(endY);
         skin.setStrokeWidth(2);
-        skin.setFill(color);
+        skin.setStroke(color);
     }
 
     public Line getSkin() {
         return skin;
     }
 
-    public void activate(Vortex a, Vortex b){
-        if(a.getX() == startX && a.getY() == startY && b.getX() == endX && b.getY() == endY){
+    public void activate(Vortex a){
+        if((a.getX() == startX && a.getY() == startY )|| (a.getX() == endX && a.getY() == endY)){
+            skin.setOpacity(1);
             color = Color.RED;
-            skin.setFill(color);
+            skin.setStroke(color);
         }
     }
 
     public void deactivate(){
+        skin.setOpacity(1);
         color = Color.BLACK;
-        skin.setFill(color);
+        skin.setStroke(color);
     }
 }

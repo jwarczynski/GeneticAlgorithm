@@ -1,14 +1,14 @@
 package com.example.graphvisualizer;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class HelloController {
+    private int active = 0;
     private int n = 50;
     private int dist = 350;
     private double X = 400;
@@ -26,46 +27,26 @@ public class HelloController {
     private List<Color> colors;
     @FXML
     private Pane mainWindow;
+    @FXML
+    private TextField vortexChooser;
+    @FXML
+    private Button next;
+    @FXML
+    private Button prev;
+    @FXML
+    private Button clear;
     public void initialize() throws IOException, ClassNotFoundException, IllegalAccessException {
-        String filename = "queen6.txt";
-        String input;
-        Path path = Paths.get(filename);
-        BufferedReader br= Files.newBufferedReader(path);
-        input = br.readLine();
         //setColors();
         allColors();
+        loadGraph("queen6.txt");
+        colorGraph("gene_q.txt");
+    }
 
-
-        n = Integer.parseInt(input);
-        this.graph = new ArrayList<>();
-        this.edges = new ArrayList<>();
-        for(int i = 0; i < n; i++){
-            graph.add(new Vortex(X, Y, dist, i, n));
-
-        }
-        int i = 0;
-        try{
-            while((input = br.readLine()) != null)
-            {
-                String[] itemPieces = input.split(" ");
-                Vortex a = graph.get(Integer.parseInt(itemPieces[0])-1);
-                Vortex b = graph.get(Integer.parseInt(itemPieces[1])-1);
-                edges.add(new Edge(a.getX(), a.getY(), b.getX(), b.getY()));
-                mainWindow.getChildren().add(edges.get(i).getSkin());
-                i++;
-            }
-        }finally {
-            if (br!=null)
-            {
-                br.close();
-            }
-        }
-
-        for(Vortex v:graph){
-            mainWindow.getChildren().add(v.getSkin());
-            mainWindow.getChildren().add(v.getNum());
-        }
-        filename = "gene_q.txt";
+    private void colorGraph(String filename) throws IOException {
+        Path path;
+        int i;
+        BufferedReader br;
+        String input;
         path = Paths.get(filename);
         br = Files.newBufferedReader(path);
         int maxColors = Integer.parseInt(br.readLine());
@@ -82,6 +63,44 @@ public class HelloController {
             {
                 br.close();
             }
+        }
+    }
+
+    private void loadGraph(String filename) throws IOException {
+        String input;
+        Path path = Paths.get(filename);
+        BufferedReader br= Files.newBufferedReader(path);
+        input = br.readLine();
+        n = Integer.parseInt(input);
+        this.graph = new ArrayList<>();
+        this.edges = new ArrayList<>();
+        for(int i = 0; i < n; i++){
+            graph.add(new Vortex(X, Y, dist, i, n));
+
+        }
+        int i = 0;
+        try{
+            while((input = br.readLine()) != null)
+            {
+                String[] itemPieces = input.split(" ");
+                Vortex a = graph.get(Integer.parseInt(itemPieces[0])-1);
+                Vortex b = graph.get(Integer.parseInt(itemPieces[1])-1);
+                a.addAdjecent(b);
+                b.addAdjecent(a);
+                edges.add(new Edge(a.getX(), a.getY(), b.getX(), b.getY()));
+                mainWindow.getChildren().add(edges.get(i).getSkin());
+                i++;
+            }
+        }finally {
+            if (br!=null)
+            {
+                br.close();
+            }
+        }
+
+        for(Vortex v:graph){
+            mainWindow.getChildren().add(v.getSkin());
+            mainWindow.getChildren().add(v.getNum());
         }
     }
 
@@ -104,9 +123,65 @@ public class HelloController {
                 return o1.toString().compareTo(o2.toString());
             }
         });
-        colors.remove(0);
+        colors.remove(Color.TRANSPARENT);
+        colors.remove(Color.WHITE);
         colors.remove(Color.BLACK);
 
+    }
+    public void handleTextEdit(){
+        active  = Integer.parseInt(vortexChooser.getText());
+        changeShown(active);
+
+    }
+
+    private void changeShown(int i) {
+        for(Vortex v: graph){
+            v.hide();
+        }
+        for(Edge e: edges){
+            e.getSkin().setOpacity(0);
+        }
+        if(i == 0){
+            graphClear();
+        }
+        else if(i > 0 && i <= n){
+            prev.setVisible(true);
+            next.setVisible(true);
+            graph.get(i -1).activate();
+            for(Edge e: edges){
+                e.activate(graph.get(i -1));
+            }
+            if(i == n){
+                next.setVisible(false);
+            }
+        }
+    }
+
+    private void graphClear() {
+        for(Vortex v: graph){
+            v.deactivate();
+        }
+        for(Edge e: edges){
+            e.deactivate();
+        }
+        prev.setVisible(false);
+        next.setVisible(true);
+    }
+
+    public void handleNext(){
+        active ++;
+        vortexChooser.setText(String.valueOf(active));
+        changeShown(active);
+    }
+    public void handlePrevious(){
+        active--;
+        vortexChooser.setText(String.valueOf(active));
+        changeShown(active);
+    }
+    public void handleClear(){
+        active = 0;
+        vortexChooser.setText(String.valueOf(active));
+        graphClear();
     }
 
     public void setColors() {

@@ -6,6 +6,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Vortex {
@@ -21,8 +22,6 @@ public class Vortex {
     private Circle skin;
     @FXML
     private Text num;
-
-
 
     private List <Vortex> adjecent;
 
@@ -44,6 +43,7 @@ public class Vortex {
         num.setX(this.x);
         num.setY(this.y);
         num.setFont(Font.font("Arial"));
+        adjecent = new ArrayList<>();
     }
 
     public void setFilling(Color filling) {
@@ -71,6 +71,16 @@ public class Vortex {
         return y;
     }
 
+    public boolean addAdjecent(Vortex adj){
+       if(! adjecent.contains(adj)){
+           adjecent.add(adj);
+           return true;
+       }
+       else{
+           return false;
+       }
+    }
+
     public List<Vortex> getAdjecent() {
         return adjecent;
     }
@@ -79,4 +89,25 @@ public class Vortex {
         return num;
     }
 
+    public void activate(){
+        skin.setStroke(Color.RED);
+        skin.setOpacity(1);
+        num.setVisible(true);
+        for(Vortex v: adjecent){
+            v.getSkin().setOpacity(1);
+            v.getSkin().setStroke(Color.RED);
+            v.getNum().setVisible(true);
+        }
+    }
+
+
+    public void hide(){
+        skin.setOpacity(0);
+        num.setVisible(false);
+    }
+    public void deactivate(){
+        skin.setStroke(Color.BLACK);
+        skin.setOpacity(1);
+        num.setVisible(true);
+    }
 }
