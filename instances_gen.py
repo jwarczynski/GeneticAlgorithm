@@ -46,11 +46,11 @@ def matrix_gen(size, den):
     return mat
 
 #main
-#for i in range(5, 20):
 
-v =30 #verticies
+#for v in range(10, 151, 10):
+v =15 #verticies
 d = 50 #density
-f = open("GC"+str(v)+"_"+str(d)+".txt", 'w')
+f = open("GC"+str(v)+".txt", 'w')
 mat = matrix_gen(v, d)
 print(v)
 

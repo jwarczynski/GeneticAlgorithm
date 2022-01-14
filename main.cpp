@@ -251,7 +251,7 @@ void mutate(vector<int> *chromosome, int maxColor, int a) {
     while (find(tabu.begin(), tabu.end(), newColor) != tabu.end()) {
         newColor++;
     }
-    if(newColor == maxColor){
+    if(newColor >= maxColor){
         newColor = rand()%(maxColor-1)+1;
     }
     chromosome->at(a) = newColor;
@@ -300,9 +300,9 @@ vector<int> *mate(vector<int> *mother, vector<int> *father, int maxColors) {
     auto toMutate = new vector<int>;
     for (int i = 0; i < mother->size(); i++) {
         int a = rand() % 100;
-        if (a < 48) {
+        if (a < 45) {
             res->push_back(mother->at(i));
-        } else if (a < 96) {
+        } else if (a < 90) {
             res->push_back(father->at(i));
         } else {
             res ->push_back(-1);
@@ -319,6 +319,8 @@ vector<pair<vector<int> *, int> *> *newPopVol2(vector<pair<vector<int> *, int> *
     auto *newPopulation = new vector<pair<vector<int> *, int> *>;
     int i = 0;
     for (i; i < population->size() / 10; i++) {
+        //mutate(population->at(i)->first, maxColors, rand()%n);
+        //mutate(population->at(i)->first, maxColors, rand()%n);
         newPopulation->push_back(population->at(i));
     }
     for (i; i < population->size(); i++) {
@@ -386,6 +388,7 @@ int geneticAlg(vector<pair<vector<int> *, int> *> *sample) {
     int best = mDeg;
     vector<int> *bestChr = population->at(0)->first;
     auto start = chrono::steady_clock::now();
+    //while(t<2500){
     while (since(start).count() < 300000) {
         t++;
         newPopulation = newPopVol2(population, colors);
@@ -410,7 +413,7 @@ int geneticAlg(vector<pair<vector<int> *, int> *> *sample) {
                 best = colors;
                 bestChr = population->at(0)->first;
             }
-            population = devaluate(population, best);
+            population = devaluate(population, best-1);
             colors--;
             //colors = colorCount(population);
         }
@@ -548,7 +551,7 @@ vector<pair<vector<int> *, int> *> *generateSmallSample(){
 
 int main() {
     srand(time(NULL));
-    string f_name = "le450_5a.txt";
+    string f_name = "anna.col";
     read(f_name);
 //    show(matrix, n);
 //    int *outcome = greedy_coloring_matrix();
