@@ -259,6 +259,7 @@ void mutate(vector<int> *chromosome, int maxColor, int a) {
 
 int colorCount(vector<int> *chromosome) {
     int res = 0;
+		#pragma omp parallel for reduction(max : res)
     for (int gene: *chromosome) {
         res = max(res, gene);
     }
@@ -267,6 +268,7 @@ int colorCount(vector<int> *chromosome) {
 
 int colorCount(vector<pair<vector<int> *, int> *> *population) {
     int res = 0;
+		#pragma omp parallel for reduction(max: res)
     for (pair<vector<int> *, int> *chromosome: *population) {
         res = max(res, colorCount(chromosome->first));
     }
@@ -276,8 +278,10 @@ int colorCount(vector<pair<vector<int> *, int> *> *population) {
 
 vector<int> *minimalizeColors(vector<int> *chromosome, int maxColors) {
     vector<int> colors(maxColors);
-    for (int gene: *chromosome) {
-        colors.at(gene - 1)++;
+    #pragma omp parallel for
+    for (int i = 0; i < chromosome->size(); ++i) {
+        #pragma omp atomic
+        ++colors[chromosome->at(i) - 1];
     }
     vector<int> swapTab(maxColors);
     int lowest = 0;
@@ -292,6 +296,10 @@ vector<int> *minimalizeColors(vector<int> *chromosome, int maxColors) {
     for (int i: *chromosome) {
         newChromosome->push_back(swapTab.at(i - 1) + 1);
     }
+		//#pragma omp parallel for
+    //for (int i = 0; i < chromosome->size(); i++) {
+    //    newChromosome->push_back(swapTab.at(chromosome->at(i) - 1) + 1);
+    //}
     return newChromosome;
 }
 
@@ -389,7 +397,10 @@ int geneticAlg(vector<pair<vector<int> *, int> *> *sample) {
     vector<int> *bestChr = population->at(0)->first;
     auto start = chrono::steady_clock::now();
     //while(t<2500){
-    while (since(start).count() < 300000) {
+    //while (since(start).count() < 300000) {
+		//while (bestChr->at(0)->second != 0 || best > 85) {
+		while (t < 150) {
+
         t++;
         newPopulation = newPopVol2(population, colors);
 
@@ -407,7 +418,7 @@ int geneticAlg(vector<pair<vector<int> *, int> *> *sample) {
         }
         colors = colorCount(population);
         sort(population->begin(), population->end(), comp);
-        cout << t << ": " << colors << "(" << population->at(0)->second << ")\t";
+    //    cout << t << ": " << colors << "(" << population->at(0)->second << ")\t";
         if (population->at(0)->second == 0) {
             if(colors < best){
                 best = colors;
@@ -528,7 +539,7 @@ vector<pair<vector<int> *, int> *> *generateSample(){
     auto *samplePopulation = new vector<pair<vector<int> *, int> *>;
     for(int i = 0; i < SAMPLE_SIZE; i++){
         auto *sample = greedy_matrix_arbitrary_vertex(i);
-        cout << "Sample: " << i << endl;
+        //cout << "Sample: " << i << endl;
         auto *samplePair = new pair<vector<int> *, int>;
         *samplePair = make_pair(sample, fittest(sample));
         samplePopulation->push_back(samplePair);
@@ -551,24 +562,10 @@ vector<pair<vector<int> *, int> *> *generateSmallSample(){
 
 int main() {
     srand(time(NULL));
-    string f_name = "anna.col";
+    string f_name = "gc500.txt";
     read(f_name);
-//    show(matrix, n);
-//    int *outcome = greedy_coloring_matrix();
-//    printf("\nwynik:\n");
-//    for (int i = 0; i < n; i++) {
-//        printf("wierzcholek %d --> %d\n", i + 1, outcome[i] + 1);
-//    }
-
-    //auto *samplePopulation = generateSmallSample();
     auto *samplePopulation = generateSample();
     int max_color = 0;
-//    printf("\nwynik:\n");
-//    for (int i = 0; i < n; i++) {
-//        max_color = max(max_color, outcome[i] + 1);
-//        fprintf(output, "wierzcholek %d --> %d\n", i + 1, outcome[i] + 1);
-//        printf("wierzcholek %d --> %d\n", i + 1, outcome[i] + 1);
-//    }
     for (int i = 0; i < n; i++) {
         cout << samplePopulation->at(0)->first->at(i) << "\t";
         max_color = max(max_color, samplePopulation->at(0)->first->at(i)+1);
@@ -576,5 +573,7 @@ int main() {
     cout << endl << "Penalty: " << samplePopulation->at(0)->second << endl;
     printf("Uzyta ilosc kolorow: %d\n", max_color);
     cout << "Max Degree " << maxDegree() << endl;
+    auto start = chrono::steady_clock::now();
     cout << "Final result: " << geneticAlg(samplePopulation);
+    cout << "total time:" << since(start).count() << endl;
 }
