@@ -280,7 +280,6 @@ vector<int> *minimalizeColors(vector<int> *chromosome, int maxColors) {
     vector<int> colors(maxColors);
     #pragma omp parallel for
     for (int i = 0; i < chromosome->size(); ++i) {
-        #pragma omp atomic
         ++colors[chromosome->at(i) - 1];
     }
     vector<int> swapTab(maxColors);
@@ -292,28 +291,30 @@ vector<int> *minimalizeColors(vector<int> *chromosome, int maxColors) {
             swapTab.at(i) = lowest++;
         }
     }
-    auto *newChromosome = new vector<int>;
-    for (int i: *chromosome) {
-        newChromosome->push_back(swapTab.at(i - 1) + 1);
-    }
-		//#pragma omp parallel for
-    //for (int i = 0; i < chromosome->size(); i++) {
-    //    newChromosome->push_back(swapTab.at(chromosome->at(i) - 1) + 1);
+    auto *newChromosome = new vector<int>(chromosome->size(), 0);
+    //for (int i: *chromosome) {
+    //    newChromosome->push_back(swapTab.at(i - 1) + 1);
     //}
+		#pragma omp parallel for
+    for (int i = 0; i < chromosome->size(); i++) {
+        newChromosome->at(i) = swapTab.at(chromosome->at(i) - 1) + 1;
+		}
     return newChromosome;
 }
 
 vector<int> *mate(vector<int> *mother, vector<int> *father, int maxColors) {
-    auto res = new vector<int>;
+    auto res = new vector<int>(mother->size(), 0);
     auto toMutate = new vector<int>;
+		//#pragma omp parallel for
     for (int i = 0; i < mother->size(); i++) {
         int a = rand() % 100;
         if (a < 45) {
-            res->push_back(mother->at(i));
+            (*res)[i] = mother->at(i);
         } else if (a < 90) {
-            res->push_back(father->at(i));
+            (*res)[i] = father->at(i);
         } else {
-            res ->push_back(-1);
+            (*res)[i] = -1;
+            //#pragma omp critical
             toMutate->push_back(i);
         }
     }
