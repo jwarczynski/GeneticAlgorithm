@@ -1,18 +1,17 @@
+#include <fstream>
 #include <cstdlib>
 #include <iostream>
 #include <random>
 #include <ctime>
 #include <algorithm>
-#include <vector>
+#include <queue>
 
 #include "common.h"
 #include "util.h"
-#include "sequential.h"
 
 using namespace std;
 
-namespace parallel {
-
+namespace seq {
 	int fittest(const int *chromosome) {
 			int penalty = 0;
 			for (int i = 0; i < n; i++) {
@@ -57,6 +56,7 @@ namespace parallel {
 	}
 
 	vector<pair<vector<int> *, int> *> *generatePopulation(int maxDegree) {
+
 			auto *res = new vector<pair<vector<int> *, int> *>;
 			for (int i = 0; i < (POPULATION_SIZE - SAMPLE_SIZE); i++) {
 					auto *tmp = new vector<int>;
@@ -110,7 +110,6 @@ namespace parallel {
 			return res;
 	}
 
-
 	void mutate(vector<int> *chromosome, int maxColor, int a) {
 			vector<int> tabu;
 			for (int i = 0; i < n; i++) {
@@ -130,7 +129,6 @@ namespace parallel {
 
 	int colorCount(vector<int> *chromosome) {
 			int res = 0;
-			#pragma omp parallel for reduction(max : res)
 			for (int gene: *chromosome) {
 					res = max(res, gene);
 			}
@@ -139,19 +137,16 @@ namespace parallel {
 
 	int colorCount(vector<pair<vector<int> *, int> *> *population) {
 			int res = 0;
-			#pragma omp parallel for reduction(max: res)
 			for (pair<vector<int> *, int> *chromosome: *population) {
 					res = max(res, colorCount(chromosome->first));
 			}
 			return res;
 	}
 
-
 	vector<int> *minimalizeColors(vector<int> *chromosome, int maxColors) {
 			vector<int> colors(maxColors);
-			#pragma omp parallel for schedule(dynamic)
-			for (vector<int>::size_type i = 0; i < chromosome->size(); ++i) {
-					++colors[chromosome->at(i) - 1];
+			for (int gene: *chromosome) {
+					colors.at(gene - 1)++;
 			}
 			vector<int> swapTab(maxColors);
 			int lowest = 0;
@@ -162,27 +157,24 @@ namespace parallel {
 							swapTab.at(i) = lowest++;
 					}
 			}
-			auto *newChromosome = new vector<int>(chromosome->size(), 0);
-			#pragma omp parallel for schedule(dynamic)
-			for (vector<int>::size_type i = 0; i < chromosome->size(); i++) {
-					newChromosome->at(i) = swapTab.at(chromosome->at(i) - 1) + 1;
+			auto *newChromosome = new vector<int>;
+			for (int i: *chromosome) {
+					newChromosome->push_back(swapTab.at(i - 1) + 1);
 			}
 			return newChromosome;
 	}
 
 	vector<int> *mate(vector<int> *mother, vector<int> *father, int maxColors) {
-			auto res = new vector<int>(mother->size(), 0);
+			auto res = new vector<int>;
 			auto toMutate = new vector<int>;
-			//#pragma omp parallel for
 			for (vector<int>::size_type i = 0; i < mother->size(); i++) {
 					int a = rand() % 100;
 					if (a < 45) {
-							(*res)[i] = mother->at(i);
+							res->push_back(mother->at(i));
 					} else if (a < 90) {
-							(*res)[i] = father->at(i);
+							res->push_back(father->at(i));
 					} else {
-							(*res)[i] = -1;
-							//#pragma omp critical
+							res ->push_back(-1);
 							toMutate->push_back(i);
 					}
 			}
@@ -193,28 +185,21 @@ namespace parallel {
 	}
 
 	vector<pair<vector<int> *, int> *> *newPopVol2(vector<pair<vector<int> *, int> *> *population, int maxColors) {
-			auto *newPopulation = new vector<pair<vector<int> *, int> *>(population->size(), 0);
-			//vector<int>::size_type i = 0;
-			#pragma omp parallel
-			{
-				#pragma omp for schedule(dynamic)
-				for (vector<int>::size_type i = 0; i < population->size() / 10; i++) {
-						//newPopulation->push_back(population->at(i));
-						newPopulation->at(i) = population->at(i);
-				}
-				#pragma omp for schedule(dynamic) nowait
-				for (vector<int>::size_type i = population->size() / 10; i < population->size(); i++) {
-						int mother = rand() % (population->size() / 2);
-						int father = rand() % (population->size() / 2);
-						while (father == mother) {
-								father = (father + 1) % (population->size() / 2);
-						}
-						auto *p = new pair<vector<int> *, int>;
-						*p = make_pair(mate(population->at(mother)->first, population->at(father)->first, maxColors), 0);
-						p->second = fittest(p->first);
-						newPopulation->at(i) = p;
-						//newPopulation->push_back(p);
-				}
+			auto *newPopulation = new vector<pair<vector<int> *, int> *>;
+			vector<int>::size_type i = 0;
+			for (; i < population->size() / 10; i++) {
+					newPopulation->push_back(population->at(i));
+			}
+			for (; i < population->size(); i++) {
+					int mother = rand() % (population->size() / 2);
+					int father = rand() % (population->size() / 2);
+					while (father == mother) {
+							father = (father + 1) % (population->size() / 2);
+					}
+					auto *p = new pair<vector<int> *, int>;
+					*p = make_pair(mate(population->at(mother)->first, population->at(father)->first, maxColors), 0);
+					p->second = fittest(p->first);
+					newPopulation->push_back(p);
 			}
 			return newPopulation;
 	}
@@ -255,8 +240,6 @@ namespace parallel {
 			sort(population->begin(), population->end(), comp);
 			unsigned int t = 0;
 			int best = mDeg;
-			//while (since(start).count() < 300000) {
-			//while (bestChr->at(0)->second != 0 || best > 85) {
 			while (t < iterations) {
 					t++;
 					newPopulation = newPopVol2(population, colors);
@@ -268,10 +251,10 @@ namespace parallel {
 					}
 					colors = colorCount(population);
 					sort(population->begin(), population->end(), comp);
+					//cout << t << ": " << colors << "(" << population->at(0)->second << ")\t";
 					if (population->at(0)->second == 0) {
 							if(colors < best){
 									best = colors;
-									//bestChr = population->at(0)->first;
 							}
 							population = devaluate(population, best-1);
 							colors--;
@@ -280,8 +263,7 @@ namespace parallel {
 			return best;
 	}
 
-	void translate(string name)
-	{
+	void translate(string name) {
 			fstream input;
 			fstream output;
 			string buffer;
@@ -295,9 +277,7 @@ namespace parallel {
 			output.close();
 	}
 
-	
-
-	vector<pair<vector<int> *, int> *> *generateSmallSample(){
+	vector<pair<vector<int> *, int> *> *generateSmallSample() {
 			auto *samplePopulation = new vector<pair<vector<int> *, int> *>;
 			auto *sample = greedy_coloring_matrix();
 			auto *newSample = new vector<int>;
@@ -311,30 +291,21 @@ namespace parallel {
 	}
 }
 
-int n; // number of vertices in graph
-int **adj; // matrix representing graph
-
-int main(int argc, char* argv[]) {
-		if (argc < 3) {
-        cout << "Usage: program_name <file_name> <num_iterations>" << endl;
-        return 1;
-    }
-    srand(time(NULL));
-		string f_name = argv[1];
-		read(f_name);
-    auto *samplePopulation = generateSample();
-    int max_color = 0;
-    for (int i = 0; i < n; i++) {
-        //cout << samplePopulation->at(0)->first->at(i) << "\t";
-        max_color = max(max_color, samplePopulation->at(0)->first->at(i)+1);
-    }
-    unsigned int iterations = std::stoi(argv[2]);
-
-    auto start = chrono::steady_clock::now();
-    parallel::geneticAlg(samplePopulation, iterations);
-    cout << "total time parallel:" << since(start).count() << endl;
-//    cout << "Max Degree " << parallel::maxDegree() << endl;
-    start = chrono::steady_clock::now();
-    seq:: geneticAlg(samplePopulation, iterations);
-    cout << "total time seq:" << since(start).count() << endl;
-}
+//int main() {
+//    srand(time(NULL));
+//    string f_name = "gc500.txt";
+//    read(f_name);
+//
+//    auto *samplePopulation = generateSample();
+//    int max_color = 0;
+//    for (int i = 0; i < n; i++) {
+////        cout << samplePopulation->at(0)->first->at(i) << "\t";
+//        max_color = max(max_color, samplePopulation->at(0)->first->at(i)+1);
+//    }
+//    cout << endl << "Penalty: " << samplePopulation->at(0)->second << endl;
+//    printf("Uzyta ilosc kolorow: %d\n", max_color);
+//    cout << "Max Degree " << seq::maxDegree() << endl;
+//    auto start = chrono::steady_clock::now();
+//    cout << "Final result: " << seq::geneticAlg(samplePopulation);
+//    cout << "total time" << since(start).count() << endl;
+//}
