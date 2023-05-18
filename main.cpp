@@ -194,12 +194,10 @@ namespace parallel {
 
 	vector<pair<vector<int> *, int> *> *newPopVol2(vector<pair<vector<int> *, int> *> *population, int maxColors) {
 			auto *newPopulation = new vector<pair<vector<int> *, int> *>(population->size(), 0);
-			//vector<int>::size_type i = 0;
 			#pragma omp parallel
 			{
 				#pragma omp for schedule(dynamic)
 				for (vector<int>::size_type i = 0; i < population->size() / 10; i++) {
-						//newPopulation->push_back(population->at(i));
 						newPopulation->at(i) = population->at(i);
 				}
 				#pragma omp for schedule(dynamic) nowait
@@ -213,7 +211,6 @@ namespace parallel {
 						*p = make_pair(mate(population->at(mother)->first, population->at(father)->first, maxColors), 0);
 						p->second = fittest(p->first);
 						newPopulation->at(i) = p;
-						//newPopulation->push_back(p);
 				}
 			}
 			return newPopulation;
