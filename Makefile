@@ -1,6 +1,5 @@
 # Zmienna z nazwą folderu, w którym znajdują się pliki źródłowe
-# SRC_DIR := src
-SRC_DIR := .
+SRC_DIR := src
 
 # Zmienna z nazwą folderu, w którym ma zostać umieszczony plik wykonywalny
 BIN_DIR := bin
@@ -15,7 +14,7 @@ EXECUTABLE := $(BIN_DIR)/main
 CXX := g++
 
 # Opcje kompilacji
-CXXFLAGS := -std=c++14 -Wall -Wextra -fopenmp
+CXXFLAGS := -std=c++14 -Wall -Wextra -fopenmp -Iheaders
 
 all: $(EXECUTABLE)
 
