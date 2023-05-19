@@ -325,10 +325,10 @@ int main(int argc, char* argv[]) {
     unsigned int iterations = std::stoi(argv[2]);
 
     auto start = chrono::steady_clock::now();
-    parallel::geneticAlg(samplePopulation, iterations);
-    cout << "total time parallel:" << since(start).count() << endl;
+    int paralel_result = parallel::geneticAlg(samplePopulation, iterations);
+    cout << "total time parallel:" << since(start).count() << "\tresult: " << paralel_result << endl;
 //    cout << "Max Degree " << parallel::maxDegree() << endl;
     start = chrono::steady_clock::now();
-    seq:: geneticAlg(samplePopulation, iterations);
-    cout << "total time seq:" << since(start).count() << endl;
+    int seq_result = seq:: geneticAlg(samplePopulation, iterations);
+    cout << "total time seq:" << since(start).count() << "\tresult: " << seq_result <<  endl;
 }
