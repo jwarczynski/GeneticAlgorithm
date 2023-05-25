@@ -19,8 +19,6 @@ def bfs(size, matrix):
             left.append(i)
     return left
 
-
-
 def matrix_gen(size, den):
     mat = []
     den-=3
@@ -47,23 +45,24 @@ def matrix_gen(size, den):
 
 #main
 
-#for v in range(10, 151, 10):
-v =15 #verticies
-d = 50 #density
-f = open("GC"+str(v)+".txt", 'w')
-mat = matrix_gen(v, d)
-print(v)
+for v in range(100, 1001, 100):
+    #v =15 #verticies
+    d = 50 #density
+    f = open(f"../input/{v}", 'w')
+    #f = open("GC"+str(v)+".txt", 'w')
+    mat = matrix_gen(v, d)
+#print(v)
 
-f.write(str(v))
-f.write("\n")
-for i in range(0,v):
-    for j in range(0, v):
-        if mat[i][j] == 1 :
-            f.write(str(i+1))
-            f.write(" ")
-            f.write(str(j+1))
-            f.write("\n")
-for line in mat:
-    print(line)
+    f.write(str(v))
+    f.write("\n")
+    for i in range(0,v):
+        for j in range(0, v):
+            if mat[i][j] == 1 :
+                f.write(str(i+1))
+                f.write(" ")
+                f.write(str(j+1))
+                f.write("\n")
+#for line in mat:
+#    print(line)
 
-f.close()
+    f.close()

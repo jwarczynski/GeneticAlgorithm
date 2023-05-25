@@ -326,9 +326,11 @@ int main(int argc, char* argv[]) {
 
     auto start = chrono::steady_clock::now();
     int paralel_result = parallel::geneticAlg(samplePopulation, iterations);
-    cout << "total time parallel:" << since(start).count() << "\tresult: " << paralel_result << endl;
+    //cout << "total time parallel:" << since(start).count() << "\tresult: " << paralel_result << endl;
+    cout << since(start).count() << " " << paralel_result << endl;
 //    cout << "Max Degree " << parallel::maxDegree() << endl;
     start = chrono::steady_clock::now();
     int seq_result = seq:: geneticAlg(samplePopulation, iterations);
-    cout << "total time seq:" << since(start).count() << "\tresult: " << seq_result <<  endl;
+    cout << since(start).count() << " " << seq_result << endl;
+    //cout << "total time seq:" << since(start).count() << "\tresult: " << seq_result <<  endl;
 }
