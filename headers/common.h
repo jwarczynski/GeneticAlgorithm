@@ -7,10 +7,12 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <random>
 #include <ctime>
 #include <algorithm>
 #include <vector>
+#include <queue>
 
 extern int n; // number of vertices in graph
 extern int **adj; // matrix representing graph
