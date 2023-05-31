@@ -1,7 +1,7 @@
 #include <cstdio>
 
-#include "common.h"
-#include "util.h"
+#include "../headers/common.h"
+#include "../headers/util.h"
 
 
 //tworzy macierz sasiedztwa z pliku wejsciowego
