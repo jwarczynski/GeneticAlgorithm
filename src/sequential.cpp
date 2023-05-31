@@ -214,7 +214,7 @@ namespace seq {
 			return newPopulation;
 	}
 
-	int geneticAlg(vector<pair<vector<int> *, int> *> *sample, unsigned int iterations) {
+	int geneticAlg(vector<pair<vector<int> *, int> *> *sample, unsigned int iterations, std::vector<int> *res) {
 			int colors = 0;
 			int mDeg;
 			if (sample->empty()) {
@@ -247,6 +247,7 @@ namespace seq {
 					if (population->at(0)->second == 0) {
 							if(colors < best){
 									best = colors;
+                  *res = *population->at(0)->first;
 							}
 							population = devaluate(population, best-1);
 							colors--;

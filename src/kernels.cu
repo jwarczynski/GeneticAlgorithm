@@ -4,6 +4,7 @@
 
 #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
+#include <iostream>
 
 
 #define MAX_THREADS  256
@@ -176,6 +177,7 @@ namespace gpu {
   //     cudaMalloc((void**)&d_data, n * sizeof(int));
   //     cudaMemcpy(d_data, chromosome->data(), n * sizeof(int), cudaMemcpyHostToDevice);
   //
+  //     std::cout << "before max reduction\n";
   //     // Set up grid and block dimensions
   //     // unsigned int blockSize = 256;
   //     // unsigned int numBlocks = (n + blockSize - 1) / blockSize;
@@ -185,7 +187,7 @@ namespace gpu {
   //     // cudaMalloc((void**)&d_intermediate, numBlocks * sizeof(int));
   //     int* d_result;
   //     cudaMalloc((void**)&d_result, sizeof(int));
-  //     chooseAndReduceToMax(d_result, d_data, n*sizeof(int));
+  //     chooseAndReduceToMax(d_result, d_data, n);
   //
   //     // Invoke the reduce kernel
   //     // reduceToMax<int, blockSize><<<numBlocks, blockSize>>>(d_data, d_intermediate, n);

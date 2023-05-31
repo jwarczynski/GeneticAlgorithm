@@ -11,7 +11,7 @@ namespace seq {
 	int maxDegree();
 	void translate(string name);
 	vector<pair<vector<int> *, int> *> *generateSmallSample();
-	int geneticAlg(vector<pair<vector<int> *, int> *> *sample, unsigned int iterations);
+	int geneticAlg(vector<pair<vector<int> *, int> *> *sample, unsigned int iterations, std::vector<int> *coloring);
 	vector<pair<vector<int> *, int> *> *devaluate(vector<pair<vector<int> *, int> *> *population, int maxColors);
 	vector<int> *mate(vector<int> *mother, vector<int> *father, int maxColors);
 	vector<int> *minimalizeColors(vector<int> *chromosome, int maxColors);

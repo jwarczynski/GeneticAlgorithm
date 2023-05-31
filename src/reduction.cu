@@ -54,7 +54,7 @@ namespace gpu {
   __global__ void reduceToMax(T* g_idata, T* g_odata, unsigned int n) {
       // Handle to thread block group
       cg::thread_block cta = cg::this_thread_block();
-      extern __shared__ T sdata[];
+      T *sdata = new T;
 
       // Load data from global memory to shared memory
       unsigned int tid = threadIdx.x;

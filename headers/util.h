@@ -7,6 +7,10 @@
 #include <queue>
 using namespace std;
 
+typedef vector<pair<vector<int> *, int> *> population_t;
+typedef unsigned int uint;
+typedef int (*geneticAlgorithm)(population_t *, unsigned int, std::vector<int> *);
+
 struct Node **graph();
 void show();
 void read(string name);
@@ -24,5 +28,12 @@ result_t since(std::chrono::time_point<clock_t, duration_t> const& start){
 bool comp(pair<vector<int> *, int> *a, pair<vector<int> *, int> *b);
 vector<pair<vector<int> *, int> *> *generateSample();
 vector<int> *greedy_matrix_arbitrary_vertex(int u);
+
+void validateResult(std::vector<int> res);
+void reportResult(geneticAlgorithm implementation, population_t *samplePopulation);
+int calculateColorNum(population_t *population);
+void validateInputParams(int argc);
+void setInputParameters(char* argv[]);
+void benchmarkResults();
 
 #endif 

@@ -1,9 +1,12 @@
 #include "../headers/parallel.h"
 
+
 namespace parallel {
 
 	int fittest(const int *chromosome) {
 			int penalty = 0;
+
+      
 			#pragma omp parallel for reduction(+:penalty)
 			for (int i = 0; i < n; i++) {
 					for (int j = 0; j < n; j++) {
@@ -230,7 +233,7 @@ namespace parallel {
 			return newPopulation;
 	}
 
-	int geneticAlg(vector<pair<vector<int> *, int> *> *sample, unsigned int iterations) {
+	int geneticAlg(vector<pair<vector<int> *, int> *> *sample, unsigned int iterations, std::vector<int> *res) {
 			int colors = 0;
 			int mDeg;
 			if (sample->empty()) {
@@ -265,6 +268,7 @@ namespace parallel {
 					if (population->at(0)->second == 0) {
 							if(colors < best){
 									best = colors;
+                  *res = *population->at(0)->first;
 							}
 							population = devaluate(population, best-1);
 							colors--;

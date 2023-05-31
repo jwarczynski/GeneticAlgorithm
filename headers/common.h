@@ -16,6 +16,7 @@
 
 extern int n; // number of vertices in graph
 extern int **adj; // matrix representing graph
+extern unsigned int iterations;
 					 
 struct Node {
     int id;

@@ -4,6 +4,11 @@
 #include "../headers/util.h"
 
 
+#include "../headers/gpu.h"
+#include "../headers/parallel.h"
+#include "../headers/sequential.h"
+
+
 //tworzy macierz sasiedztwa z pliku wejsciowego
 struct Node **graph() {
     struct Node **arr = new struct Node *[n];
@@ -210,4 +215,55 @@ int *greedy_coloring_matrix() {
 			}
 			delete[] available;
 			return result;
+}
+
+void validateResult(std::vector<int> res) {
+  for (int i=1;i<n;++i) {
+    for (int j=i+1;j<n;j++) {
+      if (adj[i][j] == 1 && res[i] == res[j]) {
+        printf("vertex[%d](%d) is the same as vertex[%d](%d)\n", i, res[i], j, res[j]);
+        return;
+      }
+    }
+  }
+}
+
+void reportResult(geneticAlgorithm implementation, population_t *samplePopulation) {
+    auto start = chrono::steady_clock::now();
+    vector<int> *coloring = new vector<int>(n);
+    int result = implementation(samplePopulation, iterations, coloring);
+    cout << since(start).count() << " " << result << endl;
+    validateResult(*coloring);
+}
+
+
+  int calculateColorNum(population_t *population) {
+     int max_color = 0;
+     for (int i = 0; i < n; i++) {
+        max_color = max(max_color, population->at(0)->first->at(i)+1);
+      }
+     return max_color;
+  }
+
+  void validateInputParams(int argc) {
+    if (argc < 3) {
+      cout << "Usage: program_name <file_name> <num_iterations>" << endl;
+      exit(1);
+    }
+  }
+
+  void setInputParameters(char* argv[]) {
+    iterations = std::stoi(argv[2]);
+		string f_name = argv[1];
+		read(f_name);
+  }
+
+void benchmarkResults() {
+    auto *samplePopulation = generateSample();
+    geneticAlgorithm implementations[] = {gpu::geneticAlg, parallel::geneticAlg, seq::geneticAlg};
+    int implemantationsNumber = sizeof(implementations) / sizeof(implementations[0]);
+    
+    for (int i=0 ;i<implemantationsNumber ;++i) {
+      reportResult(implementations[i], samplePopulation);
+    } 
 }
