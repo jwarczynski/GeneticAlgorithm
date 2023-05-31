@@ -1,13 +1,5 @@
-#include <fstream>
-#include <cstdlib>
-#include <iostream>
-#include <random>
-#include <ctime>
-#include <algorithm>
-#include <queue>
-
-#include "common.h"
-#include "util.h"
+#include "../headers/common.h"
+#include "../headers/util.h"
 
 using namespace std;
 
@@ -290,22 +282,3 @@ namespace seq {
 			return samplePopulation;
 	}
 }
-
-//int main() {
-//    srand(time(NULL));
-//    string f_name = "gc500.txt";
-//    read(f_name);
-//
-//    auto *samplePopulation = generateSample();
-//    int max_color = 0;
-//    for (int i = 0; i < n; i++) {
-////        cout << samplePopulation->at(0)->first->at(i) << "\t";
-//        max_color = max(max_color, samplePopulation->at(0)->first->at(i)+1);
-//    }
-//    cout << endl << "Penalty: " << samplePopulation->at(0)->second << endl;
-//    printf("Uzyta ilosc kolorow: %d\n", max_color);
-//    cout << "Max Degree " << seq::maxDegree() << endl;
-//    auto start = chrono::steady_clock::now();
-//    cout << "Final result: " << seq::geneticAlg(samplePopulation);
-//    cout << "total time" << since(start).count() << endl;
-//}
