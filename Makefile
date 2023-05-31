@@ -29,7 +29,9 @@ $(CUDA_OBJ_DIR)/%.o: $(SRC_DIRS)/%.cu
 
 $(CPP_OBJ_DIR)/%.o: $(SRC_DIRS)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
+	
+run: $(EXECUTABLE)
+	./bin/main $(ARGS)
 clean:
 	rm -f $(EXECUTABLE) $(CPP_OBJS) $(CU_OBJS)
 
