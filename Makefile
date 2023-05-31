@@ -1,29 +1,35 @@
-# Zmienna z nazwą folderu, w którym znajdują się pliki źródłowe
-SRC_DIR := src
-
-# Zmienna z nazwą folderu, w którym ma zostać umieszczony plik wykonywalny
+SRC_DIRS := src
+INC_DIRS := headers
+OBJ_DIR := bin
 BIN_DIR := bin
+CUDA_OBJ_DIR := $(BIN_DIR)/cuda
+CPP_OBJ_DIR := $(BIN_DIR)/cpp
 
-# Lista plików źródłowych (rozszerzenie .cpp)
-SRCS := $(wildcard $(SRC_DIR)/*.cpp)
+CPP_FILES := $(wildcard $(SRC_DIRS)/*.cpp)
+CU_FILES := $(wildcard $(SRC_DIRS)/*.cu)
 
-# Nazwa pliku wykonywalnego
-EXECUTABLE := $(BIN_DIR)/main
+CPP_OBJS := $(patsubst $(SRC_DIRS)/%.cpp,$(CPP_OBJ_DIR)/%.o,$(CPP_FILES))
+CU_OBJS := $(patsubst $(SRC_DIRS)/%.cu,$(CUDA_OBJ_DIR)/%.o,$(CU_FILES))
 
-# Kompilator C++
 CXX := g++
+NVCC := nvcc
 
-# Opcje kompilacji
-CXXFLAGS := -std=c++14 -Wall -Wextra -fopenmp -Iheaders
+CXXFLAGS := -std=c++14 -Wall -Wextra -fopenmp $(foreach D,$(INC_DIRS),-I$(D))
+NVCCFLAGS := -std=c++14 $(foreach D,$(INC_DIRS),-I$(D))
+
+EXECUTABLE := $(BIN_DIR)/main
 
 all: $(EXECUTABLE)
 
-$(EXECUTABLE): $(SRCS)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+$(EXECUTABLE): $(CPP_OBJS) $(CU_OBJS)
+	$(NVCC) $(NVCCFLAGS) -lgomp $^ -o $@
 
-run: $(EXECUTABLE)
-	./$(EXECUTABLE) $(ARGS)
+$(CUDA_OBJ_DIR)/%.o: $(SRC_DIRS)/%.cu
+	$(NVCC) $(NVCCFLAGS) -c $< -o $@
+
+$(CPP_OBJ_DIR)/%.o: $(SRC_DIRS)/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(EXECUTABLE)
+	rm -f $(EXECUTABLE) $(CPP_OBJS) $(CU_OBJS)
 
