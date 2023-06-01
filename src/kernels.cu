@@ -4,18 +4,22 @@
 
 #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
+#include <cuda_device_runtime_api.h>
+
+#include "../headers/helper_cuda.h"
+
 #include <iostream>
 
 
 #define MAX_THREADS  256
-
+#define max(a, b) ((a) > (b) ? (a) : (b))
 
 namespace gpu {
 
   __global__ void conflictMatrixKernel(int *conflictMatrix, int *adjMatrix, int *chromosome, unsigned int n) {
     int row = blockDim.y * blockIdx.y + threadIdx.y;
     int col = blockDim.x * blockIdx.x + threadIdx.x;
-    if (row < n && col < n) {
+    if (row < n && col < n && col > row) {
       conflictMatrix[n*row + col] = (adjMatrix[n*row + col] == 1) && (chromosome[row] == chromosome[col]);
     }
     // threads = n * n-1
@@ -37,8 +41,8 @@ namespace gpu {
       blocks = (n + (threads * 2 - 1)) / (threads * 2);
     }
 
-    void chooseAndReduce(int* d_odata, int* d_idata,unsigned int size) {
-      int blocks, threads;
+    void chooseAndReduce(int* d_odata, int* d_idata,unsigned int size, int &blocks) {
+      int threads;
       getNumBlocksAndThreads(size, blocks, threads);
       dim3 dimBlock(threads, 1, 1);
       dim3 dimGrid(blocks, 1, 1);
@@ -59,7 +63,7 @@ namespace gpu {
     }
     
     int fittest(const int *chromosome) {
-      int penalty;
+      int penalty = 0;
       size_t bytes = n*n * sizeof(int);
       int * h_penaltyMatix = (int*)malloc(bytes);
       int * d_adjMatrix;
@@ -67,33 +71,40 @@ namespace gpu {
       int * d_conflictMatrix;
       int * d_result;
 
-      cudaMalloc((void**)&d_adjMatrix, bytes);
-      cudaMalloc((void**)&d_conflictMatrix, bytes);
-      cudaMalloc((void**)&d_chromosome, n*sizeof(int));
-      cudaMalloc((void**)&d_result, n*sizeof(int));
+      checkCudaErrors(cudaMalloc((void**)&d_adjMatrix, bytes));
+      checkCudaErrors(cudaMalloc((void**)&d_conflictMatrix, bytes));
+      checkCudaErrors(cudaMalloc((void**)&d_chromosome, n*sizeof(int)));
+      checkCudaErrors(cudaMalloc((void**)&d_result, bytes));
     
-      cudaMemset(d_conflictMatrix, 0, bytes);
-      cudaMemset(d_result, 0, bytes);
-      cudaMemcpy(d_adjMatrix, adj, bytes, cudaMemcpyHostToDevice);
-      cudaMemcpy(d_chromosome, adj, n*sizeof(int), cudaMemcpyHostToDevice);
+      checkCudaErrors(cudaMemset(d_conflictMatrix, 0, bytes));
+      checkCudaErrors(cudaMemset(d_result, 0, bytes));
+      checkCudaErrors(cudaMemcpy(d_chromosome, chromosome, n*sizeof(int), cudaMemcpyHostToDevice));
+      for (int i=0; i<n; ++i) {
+        checkCudaErrors(cudaMemcpyAsync(d_adjMatrix + i*n, adj[i], n*sizeof(int), cudaMemcpyHostToDevice));
+      }
 
-      unsigned int blockThreads = (n + MAX_THREADS - 1) / MAX_THREADS;
-      dim3 conflictsGridDim(blockThreads, blockThreads);
-      conflictMatrixKernel<<<conflictsGridDim, MAX_THREADS>>>(d_conflictMatrix, d_adjMatrix, d_chromosome, n);
-      chooseAndReduce(d_result, d_conflictMatrix, n*n);
+      unsigned int blockThreads = (n + 32 - 1) / 32;
+      dim3 conflictsGridDim(blockThreads, blockThreads, 1);
+      dim3 conflictsThreadsDim(32, 32, 1);
+      conflictMatrixKernel<<<conflictsGridDim, conflictsThreadsDim>>>(d_conflictMatrix, d_adjMatrix, d_chromosome, n);
+      getLastCudaError("Kernel execution failed");
 
-      cudaMemcpy(h_penaltyMatix, d_result, bytes, cudaMemcpyDeviceToHost);
-      penalty = h_penaltyMatix[0];
+      int blocks;
+      chooseAndReduce(d_result, d_conflictMatrix, n*n, blocks);
+      getLastCudaError("Kernel execution failed");
 
-      cudaFree(d_conflictMatrix);
-      cudaFree(d_adjMatrix);
-      cudaFree(d_chromosome);
-      cudaFree(d_result);
-    
+      checkCudaErrors(cudaMemcpy(h_penaltyMatix, d_result, bytes, cudaMemcpyDeviceToHost));
+      for (int i = 0; i < blocks; i++) {
+        penalty += h_penaltyMatix[i];
+      } 
+
+      checkCudaErrors(cudaFree(d_conflictMatrix));
+      checkCudaErrors(cudaFree(d_adjMatrix));
+      checkCudaErrors(cudaFree(d_chromosome));
+      checkCudaErrors(cudaFree(d_result));
+
       return penalty;
     }
-
-
 
   __global__ void crossoverKernel(int* newFirst, int* newSecond, int* first, int* second, int a, int n) {
       int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -150,8 +161,8 @@ namespace gpu {
       return res;
   }
 
-  void chooseAndReduceToMax(int* d_odata, int* d_idata,unsigned int size) {
-      int blocks, threads;
+  void chooseAndReduceToMax(int* d_odata, int* d_idata,unsigned int size, int &blocks) {
+      int  threads;
       getNumBlocksAndThreads(size, blocks, threads);
       dim3 dimBlock(threads, 1, 1);
       dim3 dimGrid(blocks, 1, 1);
@@ -171,23 +182,60 @@ namespace gpu {
       } 
     }
 
+    int reduceToMax(int* input, int n) {
+      // Device variables
+      int *d_input, *d_output;
+      int result;
+
+      // Allocate memory on the device
+      cudaMalloc((void**)&d_input, n * sizeof(int));
+      cudaMalloc((void**)&d_output, n * sizeof(int));
+
+      // Copy the input vector from the host to the device
+      cudaMemcpy(d_input, input, n * sizeof(int), cudaMemcpyHostToDevice);
+
+      // Determine the block and grid dimensions
+      int blockSize = 256;
+      int gridSize = (n + blockSize - 1) / blockSize;
+
+      // Perform parallel reduction within each block
+      reduceBlockMax<<<gridSize, blockSize, blockSize * sizeof(int)>>>(d_input, d_output, n);
+
+      // Perform final reduction across block maximum values
+      reduceFinalMax<<<1, blockSize>>>(d_output, gridSize);
+
+      // Copy the final maximum value from the device to the host
+      cudaMemcpy(&result, d_output, sizeof(int), cudaMemcpyDeviceToHost);
+
+      // Free the allocated memory on the device
+      cudaFree(d_input);
+      cudaFree(d_output);
+
+      return result;
+    }
+
+    int colorCount(std::vector<int>* chromosome) {
+      return reduceToMax(chromosome->data(), n); 
+    }
+  
   //   int colorCount(std::vector<int>* chromosome) {
-  //     int n = chromosome->size();
+  //     int bytes = n * sizeof(int);
   //     int* d_data;
-  //     cudaMalloc((void**)&d_data, n * sizeof(int));
-  //     cudaMemcpy(d_data, chromosome->data(), n * sizeof(int), cudaMemcpyHostToDevice);
-  //
-  //     std::cout << "before max reduction\n";
-  //     // Set up grid and block dimensions
-  //     // unsigned int blockSize = 256;
-  //     // unsigned int numBlocks = (n + blockSize - 1) / blockSize;
-  //
-  //     // Allocate GPU memory for intermediate and final results
-  //     // int* d_intermediate;
-  //     // cudaMalloc((void**)&d_intermediate, numBlocks * sizeof(int));
   //     int* d_result;
-  //     cudaMalloc((void**)&d_result, sizeof(int));
-  //     chooseAndReduceToMax(d_result, d_data, n);
+  //     checkCudaErrors(cudaMalloc((void**)&d_data, bytes));
+  //     checkCudaErrors(cudaMalloc((void**)&d_result, bytes));
+  //     checkCudaErrors(cudaMemcpy(d_data, chromosome->data(), bytes, cudaMemcpyHostToDevice));
+  //
+  //     int blocks;
+  //     chooseAndReduceToMax(d_result, d_data, n, blocks);
+  //     getLastCudaError("Kernel execution failed");
+  // 
+  //     int result;
+  //     int *partialMaxima = (int*)malloc(bytes);
+  //     // checkCudaErrors(cudaMemcpy(partialMaxima, d_result, bytes, cudaMemcpyDeviceToHost));
+  //     // for (int i=0; i< blocks; ++i) {
+  //     //   result = max(result, partialMaxima[i]);
+  //     // }
   //
   //     // Invoke the reduce kernel
   //     // reduceToMax<int, blockSize><<<numBlocks, blockSize>>>(d_data, d_intermediate, n);
@@ -196,13 +244,12 @@ namespace gpu {
   //     // reduceToMax<int, blockSize><<<1, blockSize>>>(d_intermediate, d_result, numBlocks);
   //
   //     // Copy the result from GPU to CPU
-  //     int result;
-  //     cudaMemcpy(&result, d_result, sizeof(int), cudaMemcpyDeviceToHost);
   //
   //     // Clean up GPU memory
-  //     cudaFree(d_data);
+  //     checkCudaErrors(cudaFree(d_data));
   //     // cudaFree(d_intermediate);
-  //     cudaFree(d_result);
+  //     checkCudaErrors(cudaFree(d_result));
+  //     free(partialMaxima);
   //
   //     return result;
   // }
@@ -225,45 +272,40 @@ namespace gpu {
       }
   }
 
-  std::vector<int>* minimalizeColorsGPU(std::vector<int>* chromosome, int maxColors) {
+  std::vector<int>* minimalizeColors(std::vector<int>* chromosome, int maxColors) {
         int size = chromosome->size();
 
         // Allocate GPU memory for chromosome, colors, swapTab, and newChromosome
         int* d_chromosome;
-        cudaMalloc((void**)&d_chromosome, size * sizeof(int));
+        checkCudaErrors(cudaMalloc((void**)&d_chromosome, size * sizeof(int)));
         int* d_colors;
-        cudaMalloc((void**)&d_colors, maxColors * sizeof(int));
+        checkCudaErrors(cudaMalloc((void**)&d_colors, maxColors * sizeof(int)));
         int* d_swapTab;
-        cudaMalloc((void**)&d_swapTab, maxColors * sizeof(int));
+        checkCudaErrors(cudaMalloc((void**)&d_swapTab, maxColors * sizeof(int)));
         int* d_newChromosome;
-        cudaMalloc((void**)&d_newChromosome, size * sizeof(int));
+        checkCudaErrors(cudaMalloc((void**)&d_newChromosome, size * sizeof(int)));
 
-        // Copy input chromosome from CPU to GPU
-        cudaMemcpy(d_chromosome, chromosome->data(), size * sizeof(int), cudaMemcpyHostToDevice);
-
-        // Set up grid and block dimensions for counting colors
+        checkCudaErrors(cudaMemcpy(d_chromosome, chromosome->data(), size * sizeof(int), cudaMemcpyHostToDevice));
         unsigned int blockSizeCount = 256;
         unsigned int numBlocksCount = (size + blockSizeCount - 1) / blockSizeCount;
 
-        // Invoke the countColorsKernel
         countColorsKernel<<<numBlocksCount, blockSizeCount>>>(d_chromosome, d_colors, size);
+        getLastCudaError("error invoking kernel");
 
         // Set up grid and block dimensions for swapping colors
         unsigned int blockSizeSwap = 256;
         unsigned int numBlocksSwap = (size + blockSizeSwap - 1) / blockSizeSwap;
 
-        // Invoke the swapColorsKernel
         swapColorsKernel<<<numBlocksSwap, blockSizeSwap>>>(d_chromosome, d_swapTab, d_newChromosome, size);
+        getLastCudaError("error invoking kernel");
 
-        // Copy the results from GPU to CPU
         std::vector<int>* newChromosome = new std::vector<int>(size);
-        cudaMemcpy(newChromosome->data(), d_newChromosome, size * sizeof(int), cudaMemcpyDeviceToHost);
+        checkCudaErrors(cudaMemcpy(newChromosome->data(), d_newChromosome, size * sizeof(int), cudaMemcpyDeviceToHost));
 
-        // Clean up GPU memory
-        cudaFree(d_chromosome);
-        cudaFree(d_colors);
-        cudaFree(d_swapTab);
-        cudaFree(d_newChromosome);
+        checkCudaErrors(cudaFree(d_chromosome));
+        checkCudaErrors(cudaFree(d_colors));
+        checkCudaErrors(cudaFree(d_swapTab));
+        checkCudaErrors(cudaFree(d_newChromosome));
 
         return newChromosome;
     }

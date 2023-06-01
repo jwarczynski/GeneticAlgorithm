@@ -1,11 +1,12 @@
 #include "../headers/gpu.h"
-#include "../headers/reduction.h"
-#include "../headers/kernels.h"
+// #include "../headers/reduction.h"
+// #include "../headers/kernels.h"
 // CUDA Runtime
-#include <cuda_device_runtime_api.h>
+// #include <cuda_device_runtime_api.h>
 
 // Utilities and system includes
-#include <driver_types.h>
+// #include <driver_types.h>
+
 // #include <helper_cuda.h>
 // #include <helper_functions.h>
 
@@ -34,7 +35,7 @@ namespace gpu {
 
 	vector<pair<vector<int> *, int> *> *generatePopulation(int maxDegree) {
 			auto *res = new vector<pair<vector<int> *, int> *>(POPULATION_SIZE - SAMPLE_SIZE);
-			#pragma omp parallel for schedule(dynamic)
+			// #pragma omp parallel for schedule(dynamic)
 			for (int i = 0; i < (POPULATION_SIZE - SAMPLE_SIZE); i++) {
 					auto *tmp = new vector<int>(n);
 					for (int j = 0; j < n; j++) {
@@ -84,46 +85,47 @@ namespace gpu {
 			chromosome->at(a) = newColor;
 	}
 
-	int colorCount(vector<int> *chromosome) {
-			int res = 0;
-			#pragma omp parallel for reduction(max : res)
-			for (int gene: *chromosome) {
-					res = max(res, gene);
-			}
-			return res;
-	}
+	// int colorCount(vector<int> *chromosome) {
+  // *res = *sample;
+	// 		int res = 0;
+	// 		// #pragma omp parallel for reduction(max : res)
+	// 		for (int gene: *chromosome) {
+	// 				res = max(res, gene);
+	// 		}
+	// 		return res;
+	// }
 
 	int colorCount(vector<pair<vector<int> *, int> *> *population) {
 			int res = 0;
-			#pragma omp parallel for reduction(max: res)
+			// #pragma omp parallel for reduction(max: res)
 			for (pair<vector<int> *, int> *chromosome: *population) {
 					res = max(res, colorCount(chromosome->first));
 			}
 			return res;
 	}
 
-	vector<int> *minimalizeColors(vector<int> *chromosome, int maxColors) {
-			auto *newChromosome = new vector<int>(chromosome->size(), 0);
-			vector<int> colors(maxColors);
-			#pragma omp parallel for schedule(dynamic)
-			for (vector<int>::size_type i = 0; i < chromosome->size(); ++i) {
-					++colors[chromosome->at(i) - 1];
-			}
-			vector<int> swapTab(maxColors);
-			int lowest = 0;
-			for (vector<int>::size_type i = 0; i < colors.size(); i++) {
-					if (colors.at(i) == 0) {
-							swapTab.at(i) = -1;
-					} else {
-							swapTab.at(i) = lowest++;
-					}
-			}
-			#pragma omp parallel for schedule(dynamic)
-			for (vector<int>::size_type i = 0; i < chromosome->size(); i++) {
-					newChromosome->at(i) = swapTab.at(chromosome->at(i) - 1) + 1;
-			}
-			return newChromosome;
-	}
+	// vector<int> *minimalizeColors(vector<int> *chromosome, int maxColors) {
+	// 		auto *newChromosome = new vector<int>(chromosome->size(), 0);
+	// 		vector<int> colors(maxColors);
+	// 		#pragma omp parallel for schedule(dynamic)
+	// 		for (vector<int>::size_type i = 0; i < chromosome->size(); ++i) {
+	// 				++colors[chromosome->at(i) - 1];
+	// 		}
+	// 		vector<int> swapTab(maxColors);
+	// 		int lowest = 0;
+	// 		for (vector<int>::size_type i = 0; i < colors.size(); i++) {
+	// 				if (colors.at(i) == 0) {
+	// 						swapTab.at(i) = -1;
+	// 				} else {
+	// 						swapTab.at(i) = lowest++;
+	// 				}
+	// 		}
+	// 		#pragma omp parallel for schedule(dynamic)
+	// 		for (vector<int>::size_type i = 0; i < chromosome->size(); i++) {
+	// 				newChromosome->at(i) = swapTab.at(chromosome->at(i) - 1) + 1;
+	// 		}
+	// 		return newChromosome;
+	// }
 
 	vector<int> *mate(vector<int> *mother, vector<int> *father, int maxColors) {
 			auto res = new vector<int>(mother->size(), 0);
@@ -199,6 +201,7 @@ namespace gpu {
 					mDeg = maxDegree();
 			} else {
 					mDeg = colorCount(sample);
+          *res = *sample->at(0)->first;
 			}
 			vector<pair<vector<int> *, int> *> *population;
 			vector<pair<vector<int> *, int> *> *newPopulation;

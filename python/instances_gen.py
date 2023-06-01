@@ -45,7 +45,7 @@ def matrix_gen(size, den):
 
 #main
 
-for v in range(100, 1001, 100):
+for v in range(5, 6, 100):
     #v =15 #verticies
     d = 50 #density
     f = open(f"../input/{v}", 'w')
