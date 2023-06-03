@@ -23,7 +23,7 @@ namespace parallel {
 	int fittest(vector<int> *chromosome) {
 			int penalty = 0;
 			#pragma omp parallel for reduction(+:penalty)
-			for (int i = 0; i < n; i++) {
+			for (int i = 1; i < n; i++) {
 					for (int j = i + 1; j < n; j++) {
 							if (adj[i][j] == 1) {
 									if (chromosome->at(i) == chromosome->at(j)) {
@@ -93,13 +93,13 @@ namespace parallel {
 			{
 				#pragma	omp for schedule(dynamic)
 				for (int i = 0; i < a; i++) {
-						newFirst->push_back(second->at(i));
-						newSecond->push_back(first->at(i));
+						newFirst->at(i) = (second->at(i));
+						newSecond->at(i) = (first->at(i));
 				}
 				#pragma	omp for schedule(dynamic) nowait
 				for (int i = a; i < n; i++) {
-						newFirst->push_back(first->at(i));
-						newSecond->push_back(second->at(i));
+						newFirst->at(i) = first->at(i);
+						newSecond->at(i) = second->at(i);
 				}
 			}
 			auto *res = new vector<vector<int> *>;
@@ -211,20 +211,20 @@ namespace parallel {
 			return res;
 	}
 
-	vector<pair<vector<int> *, int> *> *newPopVol2(vector<pair<vector<int> *, int> *> *population, int maxColors) {
-			auto *newPopulation = new vector<pair<vector<int> *, int> *>(population->size(), 0);
+	vector<pair<vector<int> *, int> *> *newPopVol2(population_t *population, int maxColors) {
+			auto *newPopulation = new population_t(POPULATION_SIZE, 0);
 			#pragma omp parallel
 			{
 				#pragma omp for schedule(dynamic)
-				for (vector<int>::size_type i = 0; i < population->size() / 10; i++) {
+				for (int i = 0; i < POPULATION_SIZE / 10; i++) {
 						newPopulation->at(i) = population->at(i);
 				}
 				#pragma omp for schedule(dynamic) nowait
 				for (vector<int>::size_type i = population->size() / 10; i < population->size(); i++) {
-						int mother = rand() % (population->size() / 2);
-						int father = rand() % (population->size() / 2);
+						int mother = rand() % (POPULATION_SIZE / 2);
+						int father = rand() % (POPULATION_SIZE / 2);
 						while (father == mother) {
-								father = (father + 1) % (population->size() / 2);
+								father = (father + 1) % (POPULATION_SIZE / 2);
 						}
 						auto *p = new pair<vector<int> *, int>;
 						*p = make_pair(mate(population->at(mother)->first, population->at(father)->first, maxColors), 0);
