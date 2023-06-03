@@ -6,7 +6,6 @@ namespace parallel {
 	int fittest(const int *chromosome) {
 			int penalty = 0;
 
-      
 			#pragma omp parallel for reduction(+:penalty)
 			for (int i = 0; i < n; i++) {
 					for (int j = 0; j < n; j++) {
@@ -255,13 +254,14 @@ namespace parallel {
 			return newPopulation;
 	}
 
-	int geneticAlg(vector<pair<vector<int> *, int> *> *sample, unsigned int iterations, std::vector<int> *res) {
+	int geneticAlg(population_t *sample, uint iterations, std::vector<int> *res) {
 			int colors = 0;
 			int mDeg;
 			if (sample->empty()) {
 					mDeg = maxDegree();
 			} else {
 					mDeg = colorCount(sample);
+          *res = *sample->at(0)->first;
 			}
 			vector<pair<vector<int> *, int> *> *population;
 			vector<pair<vector<int> *, int> *> *newPopulation;
@@ -274,7 +274,6 @@ namespace parallel {
 			unsigned int t = 0;
 			int best = mDeg;
 			//while (since(start).count() < 300000) {
-			//while (bestChr->at(0)->second != 0 || best > 85) {
 			while (t < iterations) {
 					t++;
 					newPopulation = newPopVol2(population, colors);
