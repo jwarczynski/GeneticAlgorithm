@@ -108,6 +108,29 @@ namespace parallel {
 			return res;
 	}
 
+  int **crossover(int *first, int *second) {
+			int a = rand() % (n - 1);
+      int *newFirst = (int*)malloc(n*sizeof(int));
+      int *newSecond = (int*)malloc(n*sizeof(int));
+			#pragma omp parallel
+			{
+				#pragma	omp for schedule(dynamic)
+				for (int i = 0; i < a; i++) {
+						newFirst[i] = second[i];
+						newSecond[i] = first[i];
+				}
+				#pragma	omp for schedule(dynamic) nowait
+				for (int i = a; i < n; i++) {
+						newFirst[i] = first[i];
+						newSecond[i] = second[i];
+				}
+			}
+			int **res = (int**)malloc(2*sizeof(int*));
+      res[0] = newFirst;
+      res[1] = newSecond;
+			return res;
+	}
+
 	void mutate(vector<int> *chromosome, int maxColor, int a) {
 			vector<int> tabu;
 			for (int i = 0; i < n; i++) {
