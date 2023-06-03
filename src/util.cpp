@@ -228,14 +228,6 @@ void validateResult(std::vector<int> res) {
   }
 }
 
-void reportResult(geneticAlgorithm implementation, population_t *samplePopulation) {
-    auto start = chrono::steady_clock::now();
-    vector<int> *coloring = new vector<int>(n);
-    int result = implementation(samplePopulation, iterations, coloring);
-    cout << since(start).count() << " " << result << endl;
-    validateResult(*coloring);
-}
-
 
   int calculateColorNum(population_t *population) {
      int max_color = 0;
@@ -258,12 +250,3 @@ void reportResult(geneticAlgorithm implementation, population_t *samplePopulatio
 		read(f_name);
   }
 
-void benchmarkResults() {
-    auto *samplePopulation = generateSample();
-    geneticAlgorithm implementations[] = {gpu::geneticAlg, parallel::geneticAlg, seq::geneticAlg};
-    int implemantationsNumber = sizeof(implementations) / sizeof(implementations[0]);
-    
-    for (int i=0 ;i<implemantationsNumber ;++i) {
-      reportResult(implementations[i], samplePopulation);
-    } 
-}

@@ -9,7 +9,7 @@ using namespace std;
 
 typedef vector<pair<vector<int> *, int> *> population_t;
 typedef unsigned int uint;
-typedef int (*geneticAlgorithm)(population_t *, unsigned int, std::vector<int> *);
+typedef int (*geneticAlgorithm)(population_t *, std::vector<int> *);
 
 struct Node **graph();
 void show();
@@ -30,10 +30,8 @@ vector<pair<vector<int> *, int> *> *generateSample();
 vector<int> *greedy_matrix_arbitrary_vertex(int u);
 
 void validateResult(std::vector<int> res);
-void reportResult(geneticAlgorithm implementation, population_t *samplePopulation);
 int calculateColorNum(population_t *population);
 void validateInputParams(int argc);
 void setInputParameters(char* argv[]);
-void benchmarkResults();
 
 #endif 

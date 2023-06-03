@@ -1,5 +1,7 @@
 #include "../headers/common.h"
 #include "../headers/util.h"
+#include "../headers/geneticAlgorithm.h"
+
 
 using namespace std;
 
@@ -202,7 +204,6 @@ namespace seq {
 					auto *newChromosome = new vector<int>;
 					for (int gene: *p->first) {
 							if (gene == maxColors - 1) {
-									// newChromosome->push_back(gene - 1);
 									newChromosome->push_back(gene);
 							} else {
 									newChromosome->push_back(gene);
@@ -215,48 +216,18 @@ namespace seq {
 			return newPopulation;
 	}
 
-	int geneticAlg(vector<pair<vector<int> *, int> *> *sample, unsigned int iterations, std::vector<int> *res) {
-			int colors = 0;
-			int mDeg;
-			if (sample->empty()) {
-					mDeg = maxDegree();
-			} else {
-					mDeg = colorCount(sample);
-          *res = *sample->at(0)->first;
-			}
-			vector<pair<vector<int> *, int> *> *population;
-			vector<pair<vector<int> *, int> *> *newPopulation;
-			population = generatePopulation(mDeg-1);
-			colors = colorCount(population);
-			for (pair<vector<int> *, int> *s: *sample) {
-					population->push_back(s);
-			}
-			sort(population->begin(), population->end(), comp);
-			unsigned int t = 0;
-			int best = mDeg;
-			while (t < iterations) {
-					t++;
-					newPopulation = newPopVol2(population, colors);
-					population = newPopulation;
-					colors = colorCount(population);
-					for (auto &i: *population) {
-							vector<int> *tmp = minimalizeColors(i->first, colors);
-							i->first = tmp;
-					}
-					colors = colorCount(population);
-					sort(population->begin(), population->end(), comp);
-					//cout << t << ": " << colors << "(" << population->at(0)->second << ")\t";
-					if (population->at(0)->second == 0) {
-							if(colors < best){
-									best = colors;
-                  *res = *population->at(0)->first;
-							}
-							population = devaluate(population, best-1);
-							colors--;
-					}
-			}
-			return best;
-	}
+  int geneticAlg(population_t *sample, std::vector<int> *res) {
+      helperFunctionsImpl implementations = {
+        seq::maxDegree,
+        seq::colorCount,
+        seq::generatePopulation,
+        seq::newPopVol2,
+        seq::minimalizeColors,
+        seq::devaluate
+      };
+
+      return geneticAlg(sample ,res, implementations);
+    }
 
 	void translate(string name) {
 			fstream input;

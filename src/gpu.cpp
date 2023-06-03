@@ -1,4 +1,6 @@
 #include "../headers/gpu.h"
+#include "../headers/geneticAlgorithm.h"
+
 
 namespace gpu {
 
@@ -189,77 +191,17 @@ int fittest(vector<int> *chromosome) { return fittest(chromosome->data()); }
       return newPopulation;
     }
 
-    int geneticAlg(vector<pair<vector<int> *, int> *> *sample,
-                   unsigned int iterations, std::vector<int> *res) {
-      int colors = 0;
-      int mDeg;
-      if (sample->empty()) {
-        mDeg = maxDegree();
-      } else {
-        mDeg = colorCount(sample);
-        *res = *sample->at(0)->first;
-      }
-      vector<pair<vector<int> *, int> *> *population;
-      vector<pair<vector<int> *, int> *> *newPopulation;
-      population = generatePopulation(mDeg - 1);
-      colors = colorCount(population);
-      for (pair<vector<int> *, int> *s : *sample) {
-        population->push_back(s);
-      }
-      sort(population->begin(), population->end(), comp);
-      unsigned int t = 0;
-      int best = mDeg;
+    int geneticAlg(population_t *sample, std::vector<int> *res) {
+      helperFunctionsImpl implementations = {
+        gpu::maxDegree,
+        gpu::colorCount,
+        gpu::generatePopulation,
+        gpu::newPopVol2,
+        gpu::minimalizeColors,
+        gpu::devaluate
+      };
 
-      // while (since(start).count() < 300000) {
-      while (t < iterations) {
-        t++;
-        newPopulation = newPopVol2(population, colors);
-        population = newPopulation;
-        colors = colorCount(population);
-        for (auto &i : *population) {
-          vector<int> *tmp = minimalizeColors(i->first, colors);
-          i->first = tmp;
-        }
-
-        colors = colorCount(population);
-        sort(population->begin(), population->end(), comp);
-        if (population->at(0)->second == 0) {
-          if (colors < best) {
-            best = colors;
-            *res = *population->at(0)->first;
-          }
-          population = devaluate(population, best - 1);
-          colors--;
-        }
-      }
-      return best;
+      return geneticAlg(sample ,res, implementations);
     }
-
-    void translate(string name) {
-      fstream input;
-      fstream output;
-      string buffer;
-      input.open(name + ".col.b", ios::in | ios::binary);
-      output.open(name + ".txt", ios::out);
-      while (!input.eof()) {
-        getline(input, buffer, '\n');
-        output << buffer << endl;
-      }
-      input.close();
-      output.close();
-    }
-
-    vector<pair<vector<int> *, int> *> *generateSmallSample() {
-      auto *samplePopulation = new vector<pair<vector<int> *, int> *>;
-      auto *sample = greedy_coloring_matrix();
-      auto *newSample = new vector<int>;
-      for (int i = 0; i < n; i++) {
-        newSample->push_back(sample[i]);
-      }
-      auto *samplePair = new pair<vector<int> *, int>;
-      *samplePair = make_pair(newSample, fittest(newSample));
-      samplePopulation->push_back(samplePair);
-      return samplePopulation;
-    }
-
-} // namespace gpu
+      
+ } 

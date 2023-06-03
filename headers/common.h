@@ -1,6 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include "util.h"
 #define POPULATION_SIZE 100
 #define SAMPLE_SIZE 3
 #define MUTATION_PERCENT 25
@@ -23,5 +24,15 @@ struct Node {
     int color;
     struct Node *child;
 };
+
+typedef struct {
+  int (*maxDegree)();
+  int (*colorCount)(population_t *);
+  vector<pair<vector<int> *, int> *> * (*generatePopulation)(int);
+  vector<pair<vector<int> *, int> *> * (*createNewPopulation)(population_t *, int);
+  vector<int> * (*minimalizeColors)(vector<int> *, int); 
+  vector<pair<vector<int> *, int> *> * (*devaluate)(population_t *, int);
+} helperFunctionsImpl;
+
 
 #endif
