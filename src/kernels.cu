@@ -272,43 +272,41 @@ namespace gpu {
       }
   }
 
-  std::vector<int>* minimalizeColors(std::vector<int>* chromosome, int maxColors) {
-        int size = chromosome->size();
+  // std::vector<int>* minimalizeColors(std::vector<int>* chromosome, int maxColors) {
+  //       int* d_chromosome;
+  //       int* d_colors;
+  //       int* d_swapTab;
+  //       int* d_newChromosome;
 
-        // Allocate GPU memory for chromosome, colors, swapTab, and newChromosome
-        int* d_chromosome;
-        checkCudaErrors(cudaMalloc((void**)&d_chromosome, size * sizeof(int)));
-        int* d_colors;
-        checkCudaErrors(cudaMalloc((void**)&d_colors, maxColors * sizeof(int)));
-        int* d_swapTab;
-        checkCudaErrors(cudaMalloc((void**)&d_swapTab, maxColors * sizeof(int)));
-        int* d_newChromosome;
-        checkCudaErrors(cudaMalloc((void**)&d_newChromosome, size * sizeof(int)));
-
-        checkCudaErrors(cudaMemcpy(d_chromosome, chromosome->data(), size * sizeof(int), cudaMemcpyHostToDevice));
-        unsigned int blockSizeCount = 256;
-        unsigned int numBlocksCount = (size + blockSizeCount - 1) / blockSizeCount;
-
-        countColorsKernel<<<numBlocksCount, blockSizeCount>>>(d_chromosome, d_colors, size);
-        getLastCudaError("error invoking kernel");
-
-        // Set up grid and block dimensions for swapping colors
-        unsigned int blockSizeSwap = 256;
-        unsigned int numBlocksSwap = (size + blockSizeSwap - 1) / blockSizeSwap;
-
-        swapColorsKernel<<<numBlocksSwap, blockSizeSwap>>>(d_chromosome, d_swapTab, d_newChromosome, size);
-        getLastCudaError("error invoking kernel");
-
-        std::vector<int>* newChromosome = new std::vector<int>(size);
-        checkCudaErrors(cudaMemcpy(newChromosome->data(), d_newChromosome, size * sizeof(int), cudaMemcpyDeviceToHost));
-
-        checkCudaErrors(cudaFree(d_chromosome));
-        checkCudaErrors(cudaFree(d_colors));
-        checkCudaErrors(cudaFree(d_swapTab));
-        checkCudaErrors(cudaFree(d_newChromosome));
-
-        return newChromosome;
-    }
+  //       checkCudaErrors(cudaMalloc((void**)&d_chromosome, n * sizeof(int)));
+  //       checkCudaErrors(cudaMalloc((void**)&d_colors, maxColors * sizeof(int)));
+  //       checkCudaErrors(cudaMalloc((void**)&d_swapTab, maxColors * sizeof(int)));
+  //       checkCudaErrors(cudaMalloc((void**)&d_newChromosome, n * sizeof(int)));
+  //
+  //       checkCudaErrors(cudaMemcpy(d_chromosome, chromosome->data(), n * sizeof(int), cudaMemcpyHostToDevice));
+  //       unsigned int blockSizeCount = 256;
+  //       unsigned int numBlocksCount = (n + blockSizeCount - 1) / blockSizeCount;
+  //
+  //       countColorsKernel<<<numBlocksCount, blockSizeCount>>>(d_chromosome, d_colors, n);
+  //       getLastCudaError("error invoking kernel");
+  //
+  //       // Set up grid and block dimensions for swapping colors
+  //       unsigned int blockSizeSwap = 256;
+  //       unsigned int numBlocksSwap = (n + blockSizeSwap - 1) / blockSizeSwap;
+  //
+  //       swapColorsKernel<<<numBlocksSwap, blockSizeSwap>>>(d_chromosome, d_swapTab, d_newChromosome, n);
+  //       getLastCudaError("error invoking kernel");
+  //
+  //       std::vector<int>* newChromosome = new std::vector<int>(n);
+  //       checkCudaErrors(cudaMemcpy(newChromosome->data(), d_newChromosome, n * sizeof(int), cudaMemcpyDeviceToHost));
+  //
+  //       checkCudaErrors(cudaFree(d_chromosome));
+  //       checkCudaErrors(cudaFree(d_colors));
+  //       checkCudaErrors(cudaFree(d_swapTab));
+  //       checkCudaErrors(cudaFree(d_newChromosome));
+  //
+  //       return newChromosome;
+  //   }
 
 
 }
