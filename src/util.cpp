@@ -8,6 +8,8 @@
 #include "../headers/parallel.h"
 #include "../headers/sequential.h"
 
+#include <queue>
+
 
 //tworzy macierz sasiedztwa z pliku wejsciowego
 struct Node **graph() {
