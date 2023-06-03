@@ -19,6 +19,14 @@ NVCCFLAGS := -std=c++14 $(foreach D,$(INC_DIRS),-I$(D))
 
 EXECUTABLE := $(BIN_DIR)/main
 
+ifeq ($(DEBUG), 1)
+	CXXFLAGS += -g
+	NVCCFLAGS += -g
+else
+	CXXFLAGS += -fopenmp
+	NVCCFLAGS += -lgomp
+endif
+
 all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(CPP_OBJS) $(CU_OBJS)
@@ -29,9 +37,14 @@ $(CUDA_OBJ_DIR)/%.o: $(SRC_DIRS)/%.cu
 
 $(CPP_OBJ_DIR)/%.o: $(SRC_DIRS)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-	
+
+
 run: $(EXECUTABLE)
 	./bin/main $(ARGS)
+
+debug: $(EXECUTABLE)
+	gdb ./bin/main $(ARGS)
+
 clean:
 	rm -f $(EXECUTABLE) $(CPP_OBJS) $(CU_OBJS)
 
