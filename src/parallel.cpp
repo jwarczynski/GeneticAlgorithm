@@ -177,7 +177,7 @@ namespace parallel {
 			int lowest = 0;
 			for (vector<int>::size_type i = 0; i < colors.size(); i++) {
 					if (colors.at(i) == 0) {
-							swapTab.at(i) = -1;
+							swapTab.at(i) = 0;
 					} else {
 							swapTab.at(i) = lowest++;
 					}
@@ -236,14 +236,13 @@ namespace parallel {
 	}
 
 	vector<pair<vector<int> *, int> *> *devaluate(vector<pair<vector<int> *, int> *> *population, int maxColors) {
-			auto *newPopulation = new vector<pair<vector<int> *, int> *>(population->size());
+			auto *newPopulation = new vector<pair<vector<int> *, int> *>(POPULATION_SIZE);
 			#pragma omp parallel for schedule(dynamic)
-			for (vector<pair<vector<int>*, int>*>::size_type i = 0; i < population->size(); i++) {
+			for (int i = 0; i < POPULATION_SIZE; i++) {
 					pair<vector<int> *, int> *p = population->at(i);
-
 					auto *newChromosome = new vector<int>;
 					for (int gene: *p->first) {
-							if (gene == maxColors - 1) {
+							if (gene == maxColors) {
 									newChromosome->push_back(gene - 1);
 							} else {
 									newChromosome->push_back(gene);
