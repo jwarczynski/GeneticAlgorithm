@@ -144,7 +144,7 @@ namespace seq {
 			int lowest = 0;
 			for (vector<int>::size_type i = 0; i < colors.size(); i++) {
 					if (colors.at(i) == 0) {
-							swapTab.at(i) = -1;
+							swapTab.at(i) = 0;
 					} else {
 							swapTab.at(i) = lowest++;
 					}
@@ -202,7 +202,8 @@ namespace seq {
 					auto *newChromosome = new vector<int>;
 					for (int gene: *p->first) {
 							if (gene == maxColors - 1) {
-									newChromosome->push_back(gene - 1);
+									// newChromosome->push_back(gene - 1);
+									newChromosome->push_back(gene);
 							} else {
 									newChromosome->push_back(gene);
 							}
@@ -221,6 +222,7 @@ namespace seq {
 					mDeg = maxDegree();
 			} else {
 					mDeg = colorCount(sample);
+          *res = *sample->at(0)->first;
 			}
 			vector<pair<vector<int> *, int> *> *population;
 			vector<pair<vector<int> *, int> *> *newPopulation;
