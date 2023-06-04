@@ -1,5 +1,5 @@
-#include "../headers/util.h"
 #include "../headers/benchmark.h"
+#include "../headers/util.h"
 
 int n; // number of vertices in graph
 int **adj; // matrix representing graph
@@ -7,10 +7,10 @@ unsigned int iterations;
 
 
 int main(int argc, char* argv[]) {
-		validateInputParams(argc);
+    validateInputParams(argc);
     setInputParameters(argv);   
     
     srand(time(NULL));
-    benchmarkResults();
+    benchmarkResultsC();
 }
 

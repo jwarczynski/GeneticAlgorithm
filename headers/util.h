@@ -4,11 +4,10 @@
 #include <fstream>
 #include <vector>
 #include <chrono>
+
+#include "types.h"
 using namespace std;
 
-typedef vector<pair<vector<int> *, int> *> population_t;
-typedef unsigned int uint;
-typedef int (*geneticAlgorithm)(population_t *, std::vector<int> *);
 
 struct Node **graph();
 void show();
@@ -32,5 +31,12 @@ void validateResult(std::vector<int> res);
 int calculateColorNum(population_t *population);
 void validateInputParams(int argc);
 void setInputParameters(char* argv[]);
+
+
+// C
+int *greedy_matrix_arbitrary_vertex(uint u);
+chromosome* generateSamplePopulation();
+void validateResult(ushort *res);
+// 
 
 #endif 

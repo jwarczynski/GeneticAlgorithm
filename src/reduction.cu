@@ -4,10 +4,14 @@
 // #include <__clang_cuda_runtime_wrapper.h>
 #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
+#include <sys/types.h>
 
 namespace cg = cooperative_groups;
 
 namespace gpu {
+  __device__ ushort device_max(ushort a, ushort b) {
+      return (a > b) ? a : b;
+  }
 
   template <class T>
   struct SharedMemory {
@@ -112,7 +116,7 @@ namespace gpu {
       }
   }
 
-  __global__ void reduceBlockMax(int* input, int* output, int n) {
+  __global__ void reduceBlockMax(ushort* input, ushort* output, ushort n) {
     extern __shared__ int sdata[];
 
     int tid = threadIdx.x;
@@ -145,13 +149,13 @@ namespace gpu {
   }
 
   // Kernel function for final reduction across block maximum values
-  __global__ void reduceFinalMax(int* input, int n) {
+  __global__ void reduceFinalMax(ushort* input, ushort n) {
       int tid = threadIdx.x;
 
       // Perform parallel reduction using binary tree algorithm
       for (int stride = blockDim.x / 2; stride > 0; stride /= 2) {
           if (tid < stride) {
-              input[tid] = max(input[tid], input[tid + stride]);
+              input[tid] = device_max(input[tid], input[tid + stride]);
           }
 
           __syncthreads();

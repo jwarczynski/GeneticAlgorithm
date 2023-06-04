@@ -33,5 +33,10 @@ typedef struct {
   std::vector<std::pair<std::vector<int> *, int> *> * (*devaluate)(population_t *, int);
 } helperFunctionsImpl;
 
+typedef struct {
+    unsigned short *genes;
+    unsigned short  conflicts;
+}chromosome ;
+
 
 #endif

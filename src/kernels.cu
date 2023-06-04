@@ -9,6 +9,7 @@
 #include "../headers/helper_cuda.h"
 
 #include <iostream>
+#include <sys/types.h>
 
 
 #define MAX_THREADS  256
@@ -62,7 +63,7 @@ namespace gpu {
       } 
     }
     
-    int fittest(const int *chromosome) {
+    ushort fittest(ushort *chromosome) {
       int penalty = 0;
       size_t bytes = n*n * sizeof(int);
       int * h_penaltyMatix = (int*)malloc(bytes);
@@ -182,30 +183,30 @@ namespace gpu {
       } 
     }
 
-    int reduceToMax(int* input, int n) {
+    ushort reduceToMax(ushort* input, ushort n) {
       // Device variables
-      int *d_input, *d_output;
-      int result;
+      ushort *d_input, *d_output;
+      ushort result;
 
       // Allocate memory on the device
-      cudaMalloc((void**)&d_input, n * sizeof(int));
-      cudaMalloc((void**)&d_output, n * sizeof(int));
+      cudaMalloc((void**)&d_input, n * sizeof(ushort));
+      cudaMalloc((void**)&d_output, n * sizeof(ushort));
 
       // Copy the input vector from the host to the device
-      cudaMemcpy(d_input, input, n * sizeof(int), cudaMemcpyHostToDevice);
+      cudaMemcpy(d_input, input, n * sizeof(ushort), cudaMemcpyHostToDevice);
 
       // Determine the block and grid dimensions
       int blockSize = 256;
       int gridSize = (n + blockSize - 1) / blockSize;
 
       // Perform parallel reduction within each block
-      reduceBlockMax<<<gridSize, blockSize, blockSize * sizeof(int)>>>(d_input, d_output, n);
+      reduceBlockMax<<<gridSize, blockSize, blockSize * sizeof(ushort)>>>(d_input, d_output, n);
 
       // Perform final reduction across block maximum values
       reduceFinalMax<<<1, blockSize>>>(d_output, gridSize);
 
       // Copy the final maximum value from the device to the host
-      cudaMemcpy(&result, d_output, sizeof(int), cudaMemcpyDeviceToHost);
+      cudaMemcpy(&result, d_output, sizeof(ushort), cudaMemcpyDeviceToHost);
 
       // Free the allocated memory on the device
       cudaFree(d_input);
@@ -214,8 +215,8 @@ namespace gpu {
       return result;
     }
 
-    int colorCount(std::vector<int>* chromosome) {
-      return reduceToMax(chromosome->data(), n); 
+    ushort colorCount(ushort* chromosome) {
+      return reduceToMax(chromosome, n); 
     }
   
   //   int colorCount(std::vector<int>* chromosome) {
