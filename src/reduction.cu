@@ -82,7 +82,7 @@ namespace gpu {
 
       T myMax = (i < n) ? g_idata[i] : 0;
       if (i + blockSize < n) {
-          myMax = max(myMax, g_idata[i + blockSize]);
+          myMax = device_max(myMax, g_idata[i + blockSize]);
       }
 
       sdata[tid] = myMax;
@@ -91,7 +91,7 @@ namespace gpu {
       // Perform reduction in shared memory
       for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1) {
           if (tid < s) {
-              myMax = max(myMax, sdata[tid + s]);
+              myMax = device_max(myMax, sdata[tid + s]);
               sdata[tid] = myMax;
           }
           cg::sync(cta);
@@ -102,11 +102,11 @@ namespace gpu {
       if (cta.thread_rank() < 32) {
           // Fetch final intermediate maximum from 2nd warp
           if (blockSize >= 64) {
-              myMax = max(myMax, sdata[tid + 32]);
+              myMax = device_max(myMax, sdata[tid + 32]);
           }
           // Reduce final warp using shuffle
           for (int offset = tile32.size() / 2; offset > 0; offset /= 2) {
-              myMax = max(myMax, tile32.shfl_down(myMax, offset));
+              myMax = device_max(myMax, tile32.shfl_down(myMax, offset));
           }
       }
 
@@ -136,7 +136,7 @@ namespace gpu {
         int index = 2 * stride * tid;
 
         if (index < blockDim.x) {
-            sdata[index] = max(sdata[index], sdata[index + stride]);
+            sdata[index] = device_max(sdata[index], sdata[index + stride]);
         }
 
         __syncthreads();
@@ -163,26 +163,26 @@ namespace gpu {
   }
 
 
-  template __global__ void reduce<int, 512>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduce<int, 256>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduce<int, 128>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduce<int, 64>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduce<int, 32>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduce<int, 16>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduce<int, 8>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduce<int, 4>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduce<int, 2>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduce<int, 1>(int *g_idata, int *g_odata, unsigned int n);
+  template __global__ void reduce<ushort, 512>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduce<ushort, 256>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduce<ushort, 128>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduce<ushort, 64>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduce<ushort, 32>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduce<ushort, 16>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduce<ushort, 8>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduce<ushort, 4>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduce<ushort, 2>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduce<ushort, 1>(ushort *g_idata, ushort *g_odata, unsigned int n);
 
 
-  template __global__ void reduceToMax<int, 512>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduceToMax<int, 256>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduceToMax<int, 128>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduceToMax<int, 64>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduceToMax<int, 32>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduceToMax<int, 16>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduceToMax<int, 8>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduceToMax<int, 4>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduceToMax<int, 2>(int *g_idata, int *g_odata, unsigned int n);
-  template __global__ void reduceToMax<int, 1>(int *g_idata, int *g_odata, unsigned int n);
+  template __global__ void reduceToMax<ushort, 512>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduceToMax<ushort, 256>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduceToMax<ushort, 128>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduceToMax<ushort, 64>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduceToMax<ushort, 32>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduceToMax<ushort, 16>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduceToMax<ushort, 8>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduceToMax<ushort, 4>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduceToMax<ushort, 2>(ushort *g_idata, ushort *g_odata, unsigned int n);
+  template __global__ void reduceToMax<ushort, 1>(ushort *g_idata, ushort *g_odata, unsigned int n);
 }

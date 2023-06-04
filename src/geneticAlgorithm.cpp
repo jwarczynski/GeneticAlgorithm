@@ -4,51 +4,6 @@
 #include <sys/types.h>
 
 
-int geneticAlg(population_t *sample, std::vector<int> *res, helperFunctionsImpl implementations) {
-    int colors = 0;
-    int mDeg;
-    if (sample->empty()) {
-      mDeg = implementations.maxDegree();
-    } else {
-      mDeg = implementations.colorCount(sample);
-      *res = *sample->at(0)->first;
-    }
-    vector<pair<vector<int> *, int> *> *population;
-    vector<pair<vector<int> *, int> *> *newPopulation;
-    population = implementations.generatePopulation(mDeg - 1);
-    colors = implementations.colorCount(population);
-    for (pair<vector<int> *, int> *s : *sample) {
-      population->push_back(s);
-    }
-    sort(population->begin(), population->end(), comp);
-    unsigned int t = 0;
-    int best = mDeg;
-
-    // while (since(start).count() < 300000) {
-    while (t < iterations) {
-        t++;
-        newPopulation = implementations.createNewPopulation(population, colors);
-        population = newPopulation;
-        colors = implementations.colorCount(population);
-        for (auto &i : *population) {
-          vector<int> *tmp = implementations.minimalizeColors(i->first, colors);
-          i->first = tmp;
-        }
-
-        colors = implementations.colorCount(population);
-        sort(population->begin(), population->end(), comp);
-        if (population->at(0)->second == 0) {
-          if (colors < best) {
-            best = colors;
-            *res = *population->at(0)->first;
-          }
-          population = implementations.devaluate(population, best - 1);
-          colors--;
-        }
-    }
-    return best;
-}
-
 
 int chromosomeComparator(const void* a, const void* b) {
     const chromosome* chromosomeA = (const chromosome*)a;
@@ -57,7 +12,7 @@ int chromosomeComparator(const void* a, const void* b) {
     return chromosomeA->conflicts - chromosomeB->conflicts;
 }
 
-void init(ushort *colors, ushort *best, chromosome *population, chromosome *sample, helperFunctionsImplC implementations) {
+void init(ushort *colors, ushort *best, chromosome *population, chromosome *sample, helperFunctionsImpl implementations) {
     *best = implementations.colorCount(sample);
     population = implementations.generatePopulation(*best - 1);
     *colors = implementations.colorCount(population);
@@ -86,13 +41,13 @@ void updateResults(chromosome *population, ushort* res, ushort *best, ushort *co
         }
 }
 
-void countAndReplaceUnusedColors(chromosome *population, ushort* colors, helperFunctionsImplC implementations) {
+void countAndReplaceUnusedColors(chromosome *population, ushort* colors, helperFunctionsImpl implementations) {
     *colors = implementations.colorCount(population);
     replaceUnusedColors(population, *colors, implementations.replaceUnusedColors);
     *colors = implementations.colorCount(population);
 }
 
-void nextGeneration(chromosome *population, ushort* res, ushort *best, ushort *colors, helperFunctionsImplC implementations) {
+void nextGeneration(chromosome *population, ushort* res, ushort *best, ushort *colors, helperFunctionsImpl implementations) {
     chromosome *newPopulation = implementations.createNewPopulation(population, *colors);
     population = newPopulation;
     countAndReplaceUnusedColors(population, colors, implementations);
@@ -101,7 +56,7 @@ void nextGeneration(chromosome *population, ushort* res, ushort *best, ushort *c
     updateResults(population, res, best, colors, implementations.devaluate);
 }
 
-ushort geneticAlg(chromosome *sample, ushort *res, helperFunctionsImplC implementations) {
+ushort geneticAlg(chromosome *sample, ushort *res, helperFunctionsImpl implementations) {
     ushort colors;
     ushort best;
     chromosome *population;

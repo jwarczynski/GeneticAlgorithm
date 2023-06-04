@@ -17,7 +17,7 @@
 
 namespace gpu {
 
-  __global__ void conflictMatrixKernel(int *conflictMatrix, int *adjMatrix, int *chromosome, unsigned int n) {
+  __global__ void conflictMatrixKernel(ushort *conflictMatrix, ushort *adjMatrix, ushort *chromosome, unsigned int n) {
     int row = blockDim.y * blockIdx.y + threadIdx.y;
     int col = blockDim.x * blockIdx.x + threadIdx.x;
     if (row < n && col < n && col > row) {
@@ -42,7 +42,7 @@ namespace gpu {
       blocks = (n + (threads * 2 - 1)) / (threads * 2);
     }
 
-    void chooseAndReduce(int* d_odata, int* d_idata,unsigned int size, int &blocks) {
+    void chooseAndReduce(ushort* d_odata, ushort* d_idata, unsigned int size, int &blocks) {
       int threads;
       getNumBlocksAndThreads(size, blocks, threads);
       dim3 dimBlock(threads, 1, 1);
@@ -50,27 +50,27 @@ namespace gpu {
       int smemSize = (threads <= 32) ? 2 * threads * sizeof(int) : threads * sizeof(int);
     
       switch (threads) {
-          case 512:reduce<int, 512><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 256:reduce<int, 256><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 128:reduce<int, 128><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 64:reduce<int, 64><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 32:reduce<int, 32><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 16:reduce<int, 16><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 8:reduce<int, 8><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 4:reduce<int, 4><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 2:reduce<int, 2><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 1:reduce<int, 1><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 512:reduce<ushort, 512><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 256:reduce<ushort, 256><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 128:reduce<ushort, 128><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 64:reduce<ushort, 64><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 32:reduce<ushort, 32><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 16:reduce<ushort, 16><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 8:reduce<ushort, 8><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 4:reduce<ushort, 4><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 2:reduce<ushort, 2><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 1:reduce<ushort, 1><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
       } 
     }
     
     ushort fittest(ushort *chromosome) {
       int penalty = 0;
       size_t bytes = n*n * sizeof(int);
-      int * h_penaltyMatix = (int*)malloc(bytes);
-      int * d_adjMatrix;
-      int * d_chromosome;
-      int * d_conflictMatrix;
-      int * d_result;
+      ushort * h_penaltyMatix = (ushort*)malloc(bytes);
+      ushort * d_adjMatrix;
+      ushort * d_chromosome;
+      ushort * d_conflictMatrix;
+      ushort * d_result;
 
       checkCudaErrors(cudaMalloc((void**)&d_adjMatrix, bytes));
       checkCudaErrors(cudaMalloc((void**)&d_conflictMatrix, bytes));
@@ -79,9 +79,9 @@ namespace gpu {
     
       checkCudaErrors(cudaMemset(d_conflictMatrix, 0, bytes));
       checkCudaErrors(cudaMemset(d_result, 0, bytes));
-      checkCudaErrors(cudaMemcpy(d_chromosome, chromosome, n*sizeof(int), cudaMemcpyHostToDevice));
+      checkCudaErrors(cudaMemcpy(d_chromosome, chromosome, n*sizeof(ushort), cudaMemcpyHostToDevice));
       for (int i=0; i<n; ++i) {
-        checkCudaErrors(cudaMemcpyAsync(d_adjMatrix + i*n, adj[i], n*sizeof(int), cudaMemcpyHostToDevice));
+        checkCudaErrors(cudaMemcpyAsync(d_adjMatrix + i*n, adj[i], n*sizeof(ushort), cudaMemcpyHostToDevice));
       }
 
       unsigned int blockThreads = (n + 32 - 1) / 32;
@@ -107,7 +107,7 @@ namespace gpu {
       return penalty;
     }
 
-  __global__ void crossoverKernel(int* newFirst, int* newSecond, int* first, int* second, int a, int n) {
+  __global__ void crossoverKernel(ushort* newFirst, ushort* newSecond, ushort* first, ushort* second, ushort a, ushort n) {
       int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
       if (tid < a) {
@@ -121,13 +121,13 @@ namespace gpu {
 
   std::vector<std::vector<int>*> *crossover(std::vector<int> *first, std::vector<int> *second, int n) {
       int a = rand() % (n - 1);
-      int size = n * sizeof(int);
+      int size = n * sizeof(ushort);
 
       // Allocate device memory
-      int* devFirst;
-      int* devSecond;
-      int* devNewFirst;
-      int* devNewSecond;
+      ushort* devFirst;
+      ushort* devSecond;
+      ushort* devNewFirst;
+      ushort* devNewSecond;
       cudaMalloc((void**)&devFirst, size);
       cudaMalloc((void**)&devSecond, size);
       cudaMalloc((void**)&devNewFirst, size);
@@ -162,7 +162,7 @@ namespace gpu {
       return res;
   }
 
-  void chooseAndReduceToMax(int* d_odata, int* d_idata,unsigned int size, int &blocks) {
+  void chooseAndReduceToMax(ushort* d_odata, ushort* d_idata,unsigned int size, int &blocks) {
       int  threads;
       getNumBlocksAndThreads(size, blocks, threads);
       dim3 dimBlock(threads, 1, 1);
@@ -170,16 +170,16 @@ namespace gpu {
       int smemSize = (threads <= 32) ? 2 * threads * sizeof(int) : threads * sizeof(int);
     
       switch (threads) {
-          case 512:reduceToMax<int, 512><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 256:reduceToMax<int, 256><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 128:reduceToMax<int, 128><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 64:reduceToMax<int, 64><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 32:reduceToMax<int, 32><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 16:reduceToMax<int, 16><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 8:reduceToMax<int, 8><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 4:reduceToMax<int, 4><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 2:reduceToMax<int, 2><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
-          case 1:reduceToMax<int, 1><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 512:reduceToMax<ushort, 512><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 256:reduceToMax<ushort, 256><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 128:reduceToMax<ushort, 128><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 64:reduceToMax<ushort, 64><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 32:reduceToMax<ushort, 32><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 16:reduceToMax<ushort, 16><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 8:reduceToMax<ushort, 8><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 4:reduceToMax<ushort, 4><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 2:reduceToMax<ushort, 2><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
+          case 1:reduceToMax<ushort, 1><<<dimGrid, dimBlock, smemSize>>>(d_idata, d_odata, size); break;
       } 
     }
 
@@ -256,15 +256,15 @@ namespace gpu {
   // }
 
 
-  __global__ void countColorsKernel(int* chromosome, int* colors, int size) {
+  __global__ void countColorsKernel(ushort* chromosome, ushort* colors, int size) {
       int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
       if (tid < size) {
-          atomicAdd(&colors[chromosome[tid] - 1], 1);
+          atomicAdd((int*)&colors[chromosome[tid] - 1], 1);
       }
   }
 
-  __global__ void swapColorsKernel(int* chromosome, int* swapTab, int* newChromosome, int size) {
+  __global__ void swapColorsKernel(ushort* chromosome, ushort* swapTab, ushort* newChromosome, int size) {
       int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
       if (tid < size) {

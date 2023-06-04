@@ -1,26 +1,23 @@
 #ifndef PARALLEL_H
 #define PARALLEL_H
 
-#include "common.h"
-#include "util.h"
+#include "types.h"
 
 namespace parallel {
 
-	int fittest(const int *chromosome);
-	int fittest(vector<int> *chromosome);
-	int maxDegree();
-	void translate(string name);
-	vector<pair<vector<int> *, int> *> *generateSmallSample();
-	int geneticAlg(vector<pair<vector<int> *, int> *> *sample, std::vector<int> *res);
-	vector<pair<vector<int> *, int> *> *devaluate(vector<pair<vector<int> *, int> *> *population, int maxColors);
-	vector<int> *mate(vector<int> *mother, vector<int> *father, int maxColors);
-	vector<int> *minimalizeColors(vector<int> *chromosome, int maxColors);
-	int colorCount(vector<pair<vector<int> *, int> *> *population);
-	int colorCount(vector<int> *chromosome);
-	void mutate(vector<int> *chromosome, int maxColor, int a);
-	vector<vector<int> *> *crossover(vector<int> *first, vector<int> *second);
-	vector<vector<int> *> *newPop(vector<vector<int> *> *population);
-	vector<pair<vector<int> *, int> *> *generatePopulation(int maxDegree);
+	ushort fittest(const ushort *chromosome);
+	ushort maxDegree();
+	// void translate(string name);
+	chromosome *generateSmallSample();
+	ushort geneticAlg(chromosome *sample, ushort *res);
+	chromosome *devaluate(chromosome *population, ushort maxColors);
+	ushort *mate(ushort *mother, ushort *father, ushort maxColors);
+	ushort *minimalizeColors(ushort *chromosome, ushort maxColors);
+	ushort colorCount(chromosome *population);
+	ushort colorCount(ushort *chromosome);
+	chromosome *newPopVol2(chromosome *population, ushort maxColors);
+	void mutate(ushort *chromosome, ushort maxColor, ushort a);
+	chromosome *generatePopulation(ushort maxDegree);
 }
 
 #endif

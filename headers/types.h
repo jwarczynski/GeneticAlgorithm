@@ -8,15 +8,13 @@
 
 #include <vector>
 #include <utility>
+#include <sys/types.h>
 
 
-extern int n; // number of vertices in graph
-extern int **adj; // matrix representing graph
+extern ushort n; // number of vertices in graph
+extern ushort **adj; // matrix representing graph
 extern unsigned int iterations;
 
-
-typedef std::vector<std::pair<std::vector<int> *, int> *> population_t;
-typedef int (*geneticAlgorithm)(population_t *, std::vector<int> *);
 					 
 struct Node {
     int id;
@@ -24,19 +22,25 @@ struct Node {
     struct Node *child;
 };
 
-typedef struct {
-  int (*maxDegree)();
-  int (*colorCount)(population_t *);
-  std::vector<std::pair<std::vector<int> *, int> *> * (*generatePopulation)(int);
-  std::vector<std::pair<std::vector<int> *, int> *> * (*createNewPopulation)(population_t *, int);
-  std::vector<int> * (*minimalizeColors)(std::vector<int> *, int); 
-  std::vector<std::pair<std::vector<int> *, int> *> * (*devaluate)(population_t *, int);
-} helperFunctionsImpl;
 
 typedef struct {
-    unsigned short *genes;
-    unsigned short  conflicts;
+    ushort *genes;
+    ushort conflicts;
 }chromosome ;
 
+
+typedef struct {
+  ushort (*maxDegree)();
+  ushort (*colorCount)(chromosome *);
+  chromosome * (*generatePopulation)(ushort);
+  chromosome * (*createNewPopulation)(chromosome *, ushort);
+  ushort * (*replaceUnusedColors)(ushort *, ushort); 
+  chromosome * (*devaluate)(chromosome *, ushort);
+} helperFunctionsImpl;
+
+
+typedef std::vector<std::pair<std::vector<int> *, int> *> population_t;
+typedef ushort (*geneticAlgorithm)(chromosome *, ushort *);
+// typedef int (*geneticAlgorithm)(population_t *, std::vector<int> *);
 
 #endif

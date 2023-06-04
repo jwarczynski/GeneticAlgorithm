@@ -1,8 +1,8 @@
 #include "../headers/benchmark.h"
 #include "../headers/util.h"
 
-int n; // number of vertices in graph
-int **adj; // matrix representing graph
+ushort n; // number of vertices in graph
+ushort **adj; // matrix representing graph
 unsigned int iterations;
 
 
@@ -11,6 +11,6 @@ int main(int argc, char* argv[]) {
     setInputParameters(argv);   
     
     srand(time(NULL));
-    benchmarkResultsC();
+    benchmarkResults();
 }
 

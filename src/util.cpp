@@ -1,15 +1,6 @@
-#include <cstdio>
-
-#include "../headers/common.h"
 #include "../headers/util.h"
 
-#include "../headers/gpu.h"
-#include "../headers/parallel.h"
-#include "../headers/sequential.h"
-
-#include <cstdlib>
 #include <queue>
-#include <sys/types.h>
 
 // tworzy macierz sasiedztwa z pliku wejsciowego
 struct Node **graph() {
@@ -39,9 +30,9 @@ void read(string name) {
   f.open(name, ios::in);
   int a, b;
   f >> n;
-  adj = new int *[n];
+  adj = new ushort *[n];
   for (int i = 0; i < n; i++) {
-    adj[i] = new int[n];
+    adj[i] = new ushort[n];
     for (int j = 0; j < n; j++) {
       adj[i][j] = 0;
     }
@@ -214,6 +205,19 @@ chromosome* generateSamplePopulation() {
   return samplePopulation;
 }
 
+void translate(string name) {
+        fstream input;
+        fstream output;
+        string buffer;
+        input.open(name+".col.b", ios::in|ios::binary);
+        output.open(name+".txt", ios::out);
+        while(!input.eof()){
+                getline(input, buffer, '\n');
+                output << buffer << endl;
+        }
+        input.close();
+        output.close();
+	}
 
 int *greedy_coloring_matrix() {
   int cr;
@@ -272,8 +276,8 @@ int calculateColorNum(population_t *population) {
 
 void validateInputParams(int argc) {
   if (argc < 3) {
-    cout << "Usage: program_name <file_name> <num_iterations>" << endl;
-    exit(1);
+      printf("Usage: program_name <file_name> <num_iterations>");
+      exit(1);
   }
 }
 
