@@ -6,8 +6,6 @@
 #define MUTATION_PERCENT 25
 
 
-#include <vector>
-#include <utility>
 #include <sys/types.h>
 
 
@@ -39,8 +37,6 @@ typedef struct {
 } helperFunctionsImpl;
 
 
-typedef std::vector<std::pair<std::vector<int> *, int> *> population_t;
 typedef ushort (*geneticAlgorithm)(chromosome *, ushort *);
-// typedef int (*geneticAlgorithm)(population_t *, std::vector<int> *);
 
 #endif

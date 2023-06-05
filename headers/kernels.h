@@ -3,7 +3,8 @@
 #define KERNELS_H
 
 #include <cuda_runtime.h>
-#include <sys/types.h>
+#include <vector>
+
 #include "types.h"
 
 

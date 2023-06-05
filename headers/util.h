@@ -23,20 +23,14 @@ template <
 result_t since(std::chrono::time_point<clock_t, duration_t> const& start){
     return std::chrono::duration_cast<result_t>(clock_t::now() - start);
 }
-bool comp(pair<vector<int> *, int> *a, pair<vector<int> *, int> *b);
-vector<pair<vector<int> *, int> *> *generateSample();
+
 vector<int> *greedy_matrix_arbitrary_vertex(int u);
 
-void validateResult(std::vector<int> res);
-int calculateColorNum(population_t *population);
 void validateInputParams(int argc);
 void setInputParameters(char* argv[]);
+void validateResult(ushort *res);
 
-
-// C
 int *greedy_matrix_arbitrary_vertex(uint u);
 chromosome* generateSamplePopulation();
-void validateResult(ushort *res);
-// 
 
 #endif 
