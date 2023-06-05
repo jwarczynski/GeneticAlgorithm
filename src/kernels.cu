@@ -1,15 +1,9 @@
-#include "../headers/kernels.h"
-#include "../headers/common.h"
-#include "../headers/reduction.h"
-
-#include <cooperative_groups.h>
-#include <cooperative_groups/reduce.h>
-#include <cuda_device_runtime_api.h>
-
 #include "../headers/helper_cuda.h"
 
-#include <iostream>
-#include <sys/types.h>
+
+#include "../headers/kernels.h"
+#include "../headers/reduction.h"
+
 
 
 #define MAX_THREADS  256
@@ -264,14 +258,14 @@ namespace gpu {
       }
   }
 
-  __global__ void swapColorsKernel(ushort* chromosome, ushort* swapTab, ushort* newChromosome, int size) {
-      int tid = blockIdx.x * blockDim.x + threadIdx.x;
-
-      if (tid < size) {
-          int color = chromosome[tid] - 1;
-          newChromosome[tid] = (swapTab[color] == -1) ? chromosome[tid] : swapTab[color] + 1;
-      }
-  }
+  // __global__ void swapColorsKernel(ushort* chromosome, ushort* swapTab, ushort* newChromosome, int size) {
+  //     int tid = blockIdx.x * blockDim.x + threadIdx.x;
+  //
+  //     if (tid < size) {
+  //         int color = chromosome[tid] - 1;
+  //         newChromosome[tid] = (swapTab[color] == -1) ? chromosome[tid] : swapTab[color] + 1;
+  //     }
+  // }
 
   // std::vector<int>* minimalizeColors(std::vector<int>* chromosome, int maxColors) {
   //       int* d_chromosome;

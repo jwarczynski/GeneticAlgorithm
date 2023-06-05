@@ -1,5 +1,6 @@
 #include "../headers/util.h"
 
+#include <iostream>
 #include <queue>
 
 // tworzy macierz sasiedztwa z pliku wejsciowego
@@ -182,17 +183,6 @@ int fittest(const ushort *chromosome) {
   return penalty;
 }
 
-vector<pair<vector<int> *, int> *> *generateSample() {
-  auto *samplePopulation = new vector<pair<vector<int> *, int> *>;
-  for (int i = 0; i < SAMPLE_SIZE; i++) {
-    auto *sample = greedy_matrix_arbitrary_vertex(i);
-    auto *samplePair = new pair<vector<int> *, int>;
-    *samplePair = make_pair(sample, fittest(sample));
-    samplePopulation->push_back(samplePair);
-  }
-  return samplePopulation;
-}
-
 chromosome* generateSamplePopulation() {
   chromosome* samplePopulation = (chromosome*)malloc(SAMPLE_SIZE * sizeof(chromosome));
   for (ushort i = 0; i < SAMPLE_SIZE; i++) {
@@ -206,18 +196,18 @@ chromosome* generateSamplePopulation() {
 }
 
 void translate(string name) {
-        fstream input;
-        fstream output;
-        string buffer;
-        input.open(name+".col.b", ios::in|ios::binary);
-        output.open(name+".txt", ios::out);
-        while(!input.eof()){
-                getline(input, buffer, '\n');
-                output << buffer << endl;
-        }
-        input.close();
-        output.close();
-	}
+    fstream input;
+    fstream output;
+    string buffer;
+    input.open(name+".col.b", ios::in|ios::binary);
+    output.open(name+".txt", ios::out);
+    while(!input.eof()){
+            getline(input, buffer, '\n');
+            output << buffer << endl;
+    }
+    input.close();
+    output.close();
+}
 
 int *greedy_coloring_matrix() {
   int cr;
@@ -249,11 +239,6 @@ int *greedy_coloring_matrix() {
   return result;
 }
 
-void validateResult(std::vector<int> res) {
-    std::vector<ushort> ushortRes(res.begin(), res.end());
-    validateResult(ushortRes.data());
-}
-
 void validateResult(ushort *res) {
   for (int i = 1; i < n; ++i) {
     for (int j = i + 1; j < n; j++) {
@@ -264,14 +249,6 @@ void validateResult(ushort *res) {
       }
     }
   }
-}
-
-int calculateColorNum(population_t *population) {
-  int max_color = 0;
-  for (int i = 0; i < n; i++) {
-    max_color = max(max_color, population->at(0)->first->at(i) + 1);
-  }
-  return max_color;
 }
 
 void validateInputParams(int argc) {

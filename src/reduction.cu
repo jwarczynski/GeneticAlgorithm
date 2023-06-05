@@ -1,10 +1,7 @@
 #include "../headers/reduction.h"
-#include "../headers/gpu.h"
 
-// #include <__clang_cuda_runtime_wrapper.h>
-#include <cooperative_groups.h>
+// #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
-#include <sys/types.h>
 
 namespace cg = cooperative_groups;
 

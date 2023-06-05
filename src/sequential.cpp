@@ -1,7 +1,5 @@
-#include "../headers/common.h"
 #include "../headers/util.h"
 #include "../headers/geneticAlgorithm.h"
-#include <cstddef>
 
 
 using namespace std;
@@ -36,6 +34,7 @@ namespace seq {
 
 	chromosome *generatePopulation(ushort maxDegree) {
         chromosome *population = (chromosome*)malloc(POPULATION_SIZE * sizeof(chromosome));
+        //printf("N: %d\n", n);
         for (ushort i = 0; i < (POPULATION_SIZE - SAMPLE_SIZE); i++) {
             ushort *genes = (ushort*)malloc(n*sizeof(ushort));
             for (ushort j = 0; j < n; j++) {
@@ -121,18 +120,18 @@ namespace seq {
         ushort *child = (ushort*)malloc(n*sizeof(ushort));
         ushort toMutate[n];
         ushort toMutateCounter = 0;
-      printf("mother ptr: %p\tfather ptr: %p\n", mother, father);
-      printf("mother[37]: %d\n", mother[37]);
+      //printf("mother ptr: %p\tfather ptr: %p\n", mother, father);
+      //printf("mother[37]: %d\n", mother[37]);
         for (ushort i = 0; i < n; i++) {
             ushort a = rand() % 100;
             if (a < 45) {
-            // printf("below 45 a = %d, i = %d\n", a, i);
+            // //printf("below 45 a = %d, i = %d\n", a, i);
               child[i] = mother[i];
             } else if (a < 90) {
-            // printf("below 90 a = %d, i = %d\n", a, i);
+            // //printf("below 90 a = %d, i = %d\n", a, i);
               child[i] = father[i];
             } else {
-            // printf("above 90 a = %d, i = %d\n", a, i);
+            // //printf("above 90 a = %d, i = %d\n", a, i);
               toMutate[toMutateCounter++] = i;
             }
           }
@@ -155,7 +154,7 @@ namespace seq {
             father = (father + 1) % (POPULATION_SIZE / 2);
           }
           chromosome child;
-          printf("mate %d chromosome\n", i);
+          //printf("mate %d chromosome\n", i);
           child.genes = mate(population[mother].genes, population[father].genes, maxColors);
           child.conflicts = fittest(child.genes);
           newPopulation[i] = child;
@@ -167,7 +166,7 @@ namespace seq {
         chromosome *newPopulation = (chromosome*)malloc(POPULATION_SIZE * sizeof(chromosome));
 		for (ushort i = 0; i < POPULATION_SIZE; ++i) {
             chromosome individual = population[i];
-            ushort *rescaledIndividual = (ushort*)malloc(sizeof(ushort));
+            ushort *rescaledIndividual = (ushort*)malloc(n * sizeof(ushort));
             for (ushort i=0; i< n; ++i) {
                 if (individual.genes[i] == maxColors) {
                     rescaledIndividual[i] = individual.genes[i] -1;

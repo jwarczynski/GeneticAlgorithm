@@ -129,8 +129,8 @@ namespace parallel {
         ushort *child = (ushort*)malloc(n*sizeof(ushort));
         ushort toMutate[n];
         ushort toMutateCounter = 0;
-      printf("mother ptr: %p\tfather ptr: %p\n", mother, father);
-      printf("mother[37]: %d\n", mother[37]);
+      //printf("mother ptr: %p\tfather ptr: %p\n", mother, father);
+      //printf("mother[37]: %d\n", mother[37]);
         #pragma omp parallel for
         for (ushort i = 0; i < n; i++) {
             ushort a = rand() % 100;
@@ -151,8 +151,8 @@ namespace parallel {
 
 	chromosome *newPopVol2(chromosome *population, ushort maxColors) {
         chromosome *newPopulation = (chromosome*)malloc(POPULATION_SIZE * sizeof(chromosome));
-        printf("created first 10 of new population\n");
-        printf("pop ptr: %p\n", population);
+        //printf("created first 10 of new population\n");
+        //printf("pop ptr: %p\n", population);
 			#pragma omp parallel
 			{
 				#pragma omp for schedule(dynamic)
@@ -168,7 +168,7 @@ namespace parallel {
                     father = (father + 1) % (POPULATION_SIZE / 2);
                   }
                   chromosome child;
-                  printf("mate %d chromosome\n", i);
+                  //printf("mate %d chromosome\n", i);
                   child.genes = mate(population[mother].genes, population[father].genes, maxColors);
                   child.conflicts = fittest(child.genes);
                   newPopulation[i] = child;
@@ -182,7 +182,7 @@ namespace parallel {
         #pragma omp parallel for schedule(dynamic)
 		for (ushort i = 0; i < POPULATION_SIZE; ++i) {
             chromosome individual = population[i];
-            ushort *rescaledIndividual = (ushort*)malloc(sizeof(ushort));
+            ushort *rescaledIndividual = (ushort*)malloc(n*sizeof(ushort));
             for (ushort i=0; i< n; ++i) {
                 if (individual.genes[i] == maxColors) {
                     rescaledIndividual[i] = individual.genes[i] -1;
