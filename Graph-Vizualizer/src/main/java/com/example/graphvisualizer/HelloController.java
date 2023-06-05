@@ -39,7 +39,7 @@ public class HelloController {
         //setColors();
         allColors();
         loadGraph("queen6.txt");
-        colorGraph("gene_q.txt");
+        colorGraph("gene.txt");
     }
 
     private void colorGraph(String filename) throws IOException {
