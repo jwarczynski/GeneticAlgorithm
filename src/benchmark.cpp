@@ -3,7 +3,9 @@
 #include "../headers/gpu.h"
 #include "../headers/parallel.h"
 #include "../headers/sequential.h"
+
 #include "../headers/util.h"
+#include "../headers/io.h"
 
 
 void reportResult(geneticAlgorithm implementation, chromosome *samplePopulation) {
@@ -12,6 +14,7 @@ void reportResult(geneticAlgorithm implementation, chromosome *samplePopulation)
     int result = implementation(samplePopulation, coloring);
     printf("%ld %d\n", since(start).count(), result);
     validateResult(coloring);
+    saveColoringToFile(coloring, "5_gpu.txt");
 }
 
 
