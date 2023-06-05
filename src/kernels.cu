@@ -17,7 +17,7 @@
 
 namespace gpu {
 
-  __global__ void conflictMatrixKernel(ushort *conflictMatrix, ushort *adjMatrix, ushort *chromosome, unsigned int n) {
+  __global__ void conflictMatrixKernel(ushort *conflictMatrix, ushort *adjMatrix, ushort *chromosome, ushort n) {
     int row = blockDim.y * blockIdx.y + threadIdx.y;
     int col = blockDim.x * blockIdx.x + threadIdx.x;
     if (row < n && col < n && col > row) {
@@ -65,7 +65,7 @@ namespace gpu {
     
     ushort fittest(ushort *chromosome) {
       int penalty = 0;
-      size_t bytes = n*n * sizeof(int);
+      size_t bytes = n*n * sizeof(ushort);
       ushort * h_penaltyMatix = (ushort*)malloc(bytes);
       ushort * d_adjMatrix;
       ushort * d_chromosome;
@@ -74,7 +74,7 @@ namespace gpu {
 
       checkCudaErrors(cudaMalloc((void**)&d_adjMatrix, bytes));
       checkCudaErrors(cudaMalloc((void**)&d_conflictMatrix, bytes));
-      checkCudaErrors(cudaMalloc((void**)&d_chromosome, n*sizeof(int)));
+      checkCudaErrors(cudaMalloc((void**)&d_chromosome, n*sizeof(ushort)));
       checkCudaErrors(cudaMalloc((void**)&d_result, bytes));
     
       checkCudaErrors(cudaMemset(d_conflictMatrix, 0, bytes));

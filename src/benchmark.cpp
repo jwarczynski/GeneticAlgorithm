@@ -22,11 +22,14 @@ void reportResult(geneticAlgorithm implementation, chromosome *samplePopulation)
 
 void benchmarkResults() {
     chromosome *samplePopulation = generateSamplePopulation();
-    geneticAlgorithm implementations[] = { gpu::geneticAlg };
+    geneticAlgorithm implementations[] = { seq::geneticAlg };
+    // geneticAlgorithm implementations[] = { parallel::geneticAlg, seq::geneticAlg };
     // geneticAlgorithm implementations[] = {gpu::geneticAlg, parallel::geneticAlg, seq::geneticAlg};
     int implemantationsNumber = sizeof(implementations) / sizeof(implementations[0]);
     
     for (int i=0; i<implemantationsNumber; ++i) {
+      printf("reported %d\n", i);
       reportResult(implementations[i], samplePopulation);
+      printf("reported %d\n", i);
     } 
 }

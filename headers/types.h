@@ -31,7 +31,7 @@ typedef struct {
 
 typedef struct {
   ushort (*maxDegree)();
-  ushort (*colorCount)(chromosome *);
+  ushort (*colorCount)(chromosome *, size_t);
   chromosome * (*generatePopulation)(ushort);
   chromosome * (*createNewPopulation)(chromosome *, ushort);
   ushort * (*replaceUnusedColors)(ushort *, ushort); 

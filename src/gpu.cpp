@@ -1,13 +1,17 @@
 #include "../headers/gpu.h"
 #include "../headers/geneticAlgorithm.h"
 #include <charconv>
+#include <cstdio>
 #include <cstdlib>
 #include <sys/types.h>
 
-#define max(a, b) ((a) > (b)) ? (a) : (b)
 
 namespace gpu {
 
+    ushort max(ushort a, ushort b) {
+        return a >= b ? a : b;
+    }
+    
     ushort maxDegree() {
       ushort maks = 0;
       for (int i = 0; i < n; i++) {
@@ -24,17 +28,18 @@ namespace gpu {
 
     chromosome *generatePopulation(ushort maxDegree) {
       chromosome *population = (chromosome*)malloc(POPULATION_SIZE * sizeof(chromosome));
+      printf("POP_SIZE - SAMPLE_SIZE: %d\n", POPULATION_SIZE -SAMPLE_SIZE);
       for (ushort i = 0; i < (POPULATION_SIZE - SAMPLE_SIZE); i++) {
         ushort *genes = (ushort*)malloc(n*sizeof(ushort));
         for (ushort j = 0; j < n; j++) {
           ushort a = rand() % maxDegree + 1;
           genes[j] = a;
+          // if (j == 37) printf("i = %d\tmother[37]: %d\n", i, genes[j]);
         }
-        chromosome populationChromosome;
-        populationChromosome.genes = genes;
-        populationChromosome.conflicts = fittest(genes);
-        population[i] = populationChromosome;
+        population[i].genes = genes;
+        population[i].conflicts = fittest(genes);
       }
+      printf("population generated at adress %p\n", population);
       return population;
     }
 
@@ -65,10 +70,13 @@ namespace gpu {
       chromosome[a] = newColor;
     }
 
-    ushort colorCount(chromosome *population) {
+    ushort colorCount(chromosome *population, size_t size) {
+        printf("COLOR COUNT START\n");
       ushort res = 0;
-      for (ushort i=0; i<POPULATION_SIZE; ++i) {
+      for (ushort i=0; i<size; ++i) {
+          printf("color %d chromosome\tpopulation[%d].genes[3]:%d\n", i, i, population[i].genes[3]);
           res = max(res, colorCount(population[i].genes));
+          printf("colored %d chromosome\n", i);
       }
       return res;
     }
@@ -101,16 +109,21 @@ namespace gpu {
     ushort *mate(ushort *mother, ushort *father, ushort maxColors) {
       ushort *child = (ushort*)malloc(n*sizeof(ushort));
       ushort toMutate[n];
-      ushort toMutateCounter;
+      ushort toMutateCounter = 0;
+      printf("mother ptr: %p\tfather ptr: %p\n", mother, father);
+      printf("mother[37]: %d", mother[37]);
       for (ushort i = 0; i < n; i++) {
         ushort a = rand() % 100;
         if (a < 45) {
+            printf("below 45 a = %d, i = %d\n", a, i);
           child[i] = mother[i];
         } else if (a < 90) {
+            printf("below 90 a = %d, i = %d\n", a, i);
           child[i] = father[i];
         } else {
           child[i] = -1;
           toMutate[toMutateCounter++] = i;
+            printf("above 90 a = %d, i = %d\n", a, i);
         }
       }
       for (ushort i=0; i<toMutateCounter; ++i) {
@@ -124,6 +137,8 @@ namespace gpu {
         for (ushort i = 0; i < POPULATION_SIZE / 10; ++i) {
           newPopulation[i] = population[i];
         }
+        printf("created first 10 of new population\n");
+        printf("pop ptr: %p\n", population);
         
         for (ushort i = POPULATION_SIZE / 10; i < POPULATION_SIZE; ++i) {
           ushort mother = rand() % (POPULATION_SIZE / 2) + 1;
@@ -136,6 +151,7 @@ namespace gpu {
           child.conflicts = fittest(child.genes);
           newPopulation[i] = child;
         }
+        
       return newPopulation;
     }
 

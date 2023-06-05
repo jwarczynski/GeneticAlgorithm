@@ -13,7 +13,7 @@ namespace parallel {
 	chromosome *devaluate(chromosome *population, ushort maxColors);
 	ushort *mate(ushort *mother, ushort *father, ushort maxColors);
 	ushort *minimalizeColors(ushort *chromosome, ushort maxColors);
-	ushort colorCount(chromosome *population);
+	ushort colorCount(chromosome *population, size_t size);
 	ushort colorCount(ushort *chromosome);
 	chromosome *newPopVol2(chromosome *population, ushort maxColors);
 	void mutate(ushort *chromosome, ushort maxColor, ushort a);

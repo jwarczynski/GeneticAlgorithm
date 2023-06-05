@@ -1,4 +1,5 @@
 #include "../headers/geneticAlgorithm.h"
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <sys/types.h>
@@ -12,15 +13,22 @@ int chromosomeComparator(const void* a, const void* b) {
     return chromosomeA->conflicts - chromosomeB->conflicts;
 }
 
-void init(ushort *colors, ushort *best, chromosome *population, chromosome *sample, helperFunctionsImpl implementations) {
-    *best = implementations.colorCount(sample);
-    population = implementations.generatePopulation(*best - 1);
-    *colors = implementations.colorCount(population);
+void init(ushort *colors, ushort *best, chromosome **population, chromosome *sample, helperFunctionsImpl implementations) {
+    *best = implementations.colorCount(sample, SAMPLE_SIZE);
+    printf("first coloring end\n");
+    *population = implementations.generatePopulation(*best - 1);
+    printf("populatoin generated\n");
+    printf("populatoin ptr:%p \n", *population);
+    printf("populatoin[0]:%p \n", population[0]->genes);
+    printf("populatoin[0][0]:%d \n", population[0]->genes[0]);
+    *colors = implementations.colorCount(*population, POPULATION_SIZE - SAMPLE_SIZE);
+    printf("second coloring end\n");
   
     for (ushort i=1; i<=SAMPLE_SIZE; ++i) {
-        population[POPULATION_SIZE - i] = sample[i-1];
+        *population[POPULATION_SIZE - i] = sample[i-1];
     }
-    qsort(population, SAMPLE_SIZE, sizeof(chromosome), chromosomeComparator);
+    qsort(*population, POPULATION_SIZE, sizeof(chromosome), chromosomeComparator);
+    printf("populatoin sorted\n");
 }
 
 void replaceUnusedColors(chromosome *population, ushort colors, ushort * (*replaceUnusedColors)(ushort *, ushort)) {
@@ -42,13 +50,17 @@ void updateResults(chromosome *population, ushort* res, ushort *best, ushort *co
 }
 
 void countAndReplaceUnusedColors(chromosome *population, ushort* colors, helperFunctionsImpl implementations) {
-    *colors = implementations.colorCount(population);
+    printf("berofre 3 color count\n");
+    *colors = implementations.colorCount(population, POPULATION_SIZE);
+    printf("berofre replaceUnusedColors\n");
     replaceUnusedColors(population, *colors, implementations.replaceUnusedColors);
-    *colors = implementations.colorCount(population);
+    printf("berofre 4 color count\n");
+    *colors = implementations.colorCount(population, POPULATION_SIZE);
 }
 
 void nextGeneration(chromosome *population, ushort* res, ushort *best, ushort *colors, helperFunctionsImpl implementations) {
     chromosome *newPopulation = implementations.createNewPopulation(population, *colors);
+    printf("created population\n");
     population = newPopulation;
     countAndReplaceUnusedColors(population, colors, implementations);
     
@@ -60,7 +72,7 @@ ushort geneticAlg(chromosome *sample, ushort *res, helperFunctionsImpl implement
     ushort colors;
     ushort best;
     chromosome *population;
-    init(&colors, &best, population, sample, implementations);
+    init(&colors, &best, &population, sample, implementations);
 
     // while (since(start).count() < 300000) {
     unsigned int t = 0;
