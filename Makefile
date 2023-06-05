@@ -14,7 +14,7 @@ CU_OBJS := $(patsubst $(SRC_DIRS)/%.cu,$(CUDA_OBJ_DIR)/%.o,$(CU_FILES))
 CXX := g++
 NVCC := nvcc
 
-CXXFLAGS := -std=c++14 -Wall -Wextra -fopenmp -fstack-protector-all $(foreach D,$(INC_DIRS),-I$(D))
+CXXFLAGS := -std=c++14 -Wall -Wextra -fopenmp $(foreach D,$(INC_DIRS),-I$(D))
 NVCCFLAGS := -std=c++14 $(foreach D,$(INC_DIRS),-I$(D))
 
 EXECUTABLE := $(BIN_DIR)/main
