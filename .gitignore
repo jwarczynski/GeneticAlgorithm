@@ -6,3 +6,5 @@ input/
 benchmark/
 *.swp
 python/myenv
+Graph-Visualizer/solutions/
+Graph-Visualizer/inputs/
