@@ -1,4 +1,5 @@
 #include "../headers/util.h"
+#include "../headers/io.h"
 
 #include <iostream>
 #include <queue>
@@ -24,28 +25,6 @@ struct Node **graph() {
     }
   }
   return arr;
-}
-
-void read(string name) {
-  fstream f;
-  f.open(name, ios::in);
-  int a, b;
-  f >> n;
-  adj = new ushort *[n];
-  for (int i = 0; i < n; i++) {
-    adj[i] = new ushort[n];
-    for (int j = 0; j < n; j++) {
-      adj[i][j] = 0;
-    }
-  }
-  while (!f.eof()) {
-    f >> a >> b;
-    a -= 1;
-    b -= 1;
-    adj[a][b] = 1;
-    adj[b][a] = 1;
-  }
-  f.close();
 }
 
 // wyswietla macierz sasiedztwa
@@ -90,10 +69,6 @@ int *greedy_coloring_list(struct Node **adj) {
   }
   delete[] available;
   return result;
-}
-
-bool comp(pair<vector<int> *, int> *a, pair<vector<int> *, int> *b) {
-  return a->second < b->second;
 }
 
 vector<int> *greedy_matrix_arbitrary_vertex(int u) {
@@ -153,22 +128,6 @@ ushort* greedy_matrix_arbitrary_vertex(ushort u) {
     return ushortArray;
 }
 
-
-
-int fittest(vector<int> *chromosome) {
-  int penalty = 0;
-  for (int i = 0; i < n; i++) {
-    for (int j = i + 1; j < n; j++) {
-      if (adj[i][j] == 1) {
-        if (chromosome->at(i) == chromosome->at(j)) {
-          penalty++;
-        }
-      }
-    }
-  }
-  return penalty;
-}
-
 int fittest(const ushort *chromosome) {
   int penalty = 0;
   for (int i = 0; i < n; i++) {
@@ -193,20 +152,6 @@ chromosome* generateSamplePopulation() {
     samplePopulation[i] = *sampleChromosome;
   }
   return samplePopulation;
-}
-
-void translate(string name) {
-    fstream input;
-    fstream output;
-    string buffer;
-    input.open(name+".col.b", ios::in|ios::binary);
-    output.open(name+".txt", ios::out);
-    while(!input.eof()){
-            getline(input, buffer, '\n');
-            output << buffer << endl;
-    }
-    input.close();
-    output.close();
 }
 
 int *greedy_coloring_matrix() {

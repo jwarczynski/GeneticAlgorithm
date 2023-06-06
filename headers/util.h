@@ -11,7 +11,6 @@ using namespace std;
 
 struct Node **graph();
 void show();
-void read(string name);
 int *greedy_coloring_list(struct Node **adj);
 int *greedy_coloring_matrix();
 
