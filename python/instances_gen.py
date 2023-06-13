@@ -1,68 +1,31 @@
-import random as rand
-import queue
+import random
 
-def bfs(size, matrix):
-    q = queue.LifoQueue() 
-    vis = [0]*size
-    start = 0
-    vis[start] = 1
-    q.put(start)
-    while(not(q.empty())):
-        u = q.get()
-        for i in range(u+1, size):
-            if matrix[u][i] > 0 and vis[i] == 0:
-                q.put(i)
-                vis[i] = 1
-    left = []
-    for i in range (size):
-        if vis[i] == 0:
-            left.append(i)
-    return left
+MIN_VERTICES = 5
+MAX_VERTICES = 6
+STEP = 1
+p = 0.5
 
-def matrix_gen(size, den):
-    mat = []
-    den-=3
-    rand.seed()
-    for i in range(size):
-        mat.append([0]*size)
-    for i in range(size):
-        for j in range (i+1, size):
-            a = rand.random() * 100
-            if a <= den:
-                mat[i][j] = 1
-        
-    tab = bfs(size, mat)
-    while len(tab) > 0:
-        for el in tab:
-            a = rand.randint(0, el-1)
-            mat[a][el] = 1
-        tab = []
-        tab = bfs(size, mat)
-    for i in range(size):
-        for j in range(i+1, size):
-            mat[j][i] = mat[i][j]
-    return mat
+# Model G(n,p)
+def gnp(n,p):
+    a = [[0 for j in range(n)] for i in range(n)]
+    for i in range(1,n):
+        for j in range(i):
+            if random.random() <= p: 
+                a[i][j] = a[j][i] = 1
+    return a 
 
-#main
 
-for v in range(5, 6, 100):
-    #v =15 #verticies
-    d = 50 #density
-    f = open(f"../input/{v}", 'w')
-    #f = open("GC"+str(v)+".txt", 'w')
-    mat = matrix_gen(v, d)
-#print(v)
-
-    f.write(str(v))
-    f.write("\n")
-    for i in range(0,v):
-        for j in range(0, v):
-            if mat[i][j] == 1 :
-                f.write(str(i+1))
-                f.write(" ")
-                f.write(str(j+1))
-                f.write("\n")
-#for line in mat:
-#    print(line)
-
-    f.close()
+def save_to_file(matrix, v, path):
+    with open(path, 'w') as f:
+        f.write(f"{v}\n")
+        for i in range(0,v):
+            for j in range(0, v):
+                if matrix[i][j] == 1 :
+                    f.write(f"{i+1} {j+1}\n")
+ 
+ 
+for v in range(MIN_VERTICES, MAX_VERTICES, STEP):
+    mat = gnp(v, p)
+    path = f"../test/{v}"
+    save_to_file(mat, v, path)
+    
